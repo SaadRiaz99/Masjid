@@ -241,6 +241,14 @@ class MainWindow:
     def add_animal(self):
         AnimalForm(self.root, self.db, self.load_animals)
 
+    def edit_animal(self):
+        sel = self.animal_tree.selection()
+        if sel:
+            aid = self.animal_tree.item(sel[0])['values'][0]
+            AnimalForm(self.root, self.db, self.load_animals, aid)
+        else:
+            messagebox.showwarning("Warning", "Select an animal to edit")
+
     def delete_animal(self):
         sel = self.animal_tree.selection()
         if sel:
