@@ -35,15 +35,12 @@ class ParticipantForm:
         tk.Button(self.top, text="Cancel", command=self.top.destroy).grid(row=4, column=1, pady=10)
 
     def load_participant(self):
-        # Load data if editing
-        participants = self.db.get_participants()
-        for p in participants:
-            if p[0] == self.participant_id:
-                self.name_entry.insert(0, p[1])
-                self.phone_entry.insert(0, p[2])
-                self.address_entry.insert(0, p[3])
-                self.cnic_entry.insert(0, p[4])
-                break
+        p = self.db.get_participant(self.participant_id)
+        if p:
+            self.name_entry.insert(0, p[1])
+            self.phone_entry.insert(0, p[2])
+            self.address_entry.insert(0, p[3])
+            self.cnic_entry.insert(0, p[4])
 
     def save(self):
         name = self.name_entry.get()

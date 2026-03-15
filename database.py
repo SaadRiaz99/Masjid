@@ -8,7 +8,9 @@ class Database:
         self.create_tables()
 
     def get_connection(self):
-        return sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
+        return conn
 
     def create_tables(self):
         conn = self.get_connection()
@@ -24,6 +26,7 @@ class Database:
                 cnic TEXT UNIQUE,
                 shares_purchased INTEGER DEFAULT 0,
                 total_cost REAL DEFAULT 0.0,
+                paid_amount REAL DEFAULT 0.0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -61,7 +64,19 @@ class Database:
                 participant_id INTEGER,
                 amount REAL NOT NULL,
                 payment_date TEXT DEFAULT CURRENT_TIMESTAMP,
-                status TEXT DEFAULT 'completed',  -- completed, pending
+                status TEXT DEFAULT 'completed',
+                FOREIGN KEY (participant_id) REFERENCES participants (id)
+            )
+        ''')
+
+        # Receipts table (New)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS receipts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                receipt_no TEXT UNIQUE NOT NULL,
+                participant_id INTEGER,
+                amount REAL NOT NULL,
+                date TEXT DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (participant_id) REFERENCES participants (id)
             )
         ''')
@@ -93,6 +108,12 @@ class Database:
             password_hash = hashlib.sha256('admin123'.encode()).hexdigest()
             cursor.execute("INSERT INTO admins (username, password_hash) VALUES (?, ?)", ('admin', password_hash))
 
+        # Migration: Add paid_amount to participants if missing
+        try:
+            cursor.execute("SELECT paid_amount FROM participants LIMIT 1")
+        except sqlite3.OperationalError:
+            cursor.execute("ALTER TABLE participants ADD COLUMN paid_amount REAL DEFAULT 0.0")
+
         conn.commit()
         conn.close()
 
@@ -100,22 +121,40 @@ class Database:
     def add_participant(self, name, phone, address, cnic):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO participants (name, phone, address, cnic)
-            VALUES (?, ?, ?, ?)
-        ''', (name, phone, address, cnic))
-        participant_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        return participant_id
+        try:
+            cursor.execute('''
+                INSERT INTO participants (name, phone, address, cnic)
+                VALUES (?, ?, ?, ?)
+            ''', (name, phone, address, cnic))
+            participant_id = cursor.lastrowid
+            # Init distribution record
+            cursor.execute("INSERT INTO distributions (participant_id, delivered) VALUES (?, FALSE)", (participant_id,))
+            conn.commit()
+            return participant_id
+        except sqlite3.IntegrityError:
+            return None
+        finally:
+            conn.close()
 
-    def get_participants(self):
+    def get_participants(self, search_query=None):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM participants")
+        if search_query:
+            query = f"%{search_query}%"
+            cursor.execute("SELECT * FROM participants WHERE name LIKE ? OR phone LIKE ? OR cnic LIKE ?", (query, query, query))
+        else:
+            cursor.execute("SELECT * FROM participants")
         rows = cursor.fetchall()
         conn.close()
         return rows
+
+    def get_participant(self, participant_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM participants WHERE id = ?", (participant_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return row
 
     def update_participant(self, participant_id, name, phone, address, cnic):
         conn = self.get_connection()
@@ -132,6 +171,7 @@ class Database:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM participants WHERE id = ?", (participant_id,))
+        cursor.execute("DELETE FROM distributions WHERE participant_id = ?", (participant_id,))
         conn.commit()
         conn.close()
 
@@ -155,103 +195,167 @@ class Database:
         rows = cursor.fetchall()
         conn.close()
         return rows
-
-    # Share allocation
-    def allocate_share(self, participant_id, animal_id, share_number):
+        
+    def get_animal(self, animal_id):
         conn = self.get_connection()
         cursor = conn.cursor()
-        # Check if share is available
-        cursor.execute("SELECT remaining_shares FROM animals WHERE id = ?", (animal_id,))
-        remaining = cursor.fetchone()[0]
-        if remaining > 0:
+        cursor.execute("SELECT * FROM animals WHERE id = ?", (animal_id,))
+        row = cursor.fetchone()
+        conn.close()
+        return row
+
+    def update_animal(self, animal_id, animal_type, price, seller, total_shares):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        # Note: updating total shares might be tricky if some are allocated.
+        # For simplicity, we update basic info.
+        cursor.execute('''
+            UPDATE animals
+            SET animal_type = ?, purchase_price = ?, seller_details = ?, total_shares = ?
+            WHERE id = ?
+        ''', (animal_type, price, seller, total_shares, animal_id))
+        conn.commit()
+        conn.close()
+        
+    def delete_animal(self, animal_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        # Check if shares are allocated
+        cursor.execute("SELECT COUNT(*) FROM shares WHERE animal_id = ?", (animal_id,))
+        if cursor.fetchone()[0] > 0:
+            conn.close()
+            return False # Cannot delete
+        cursor.execute("DELETE FROM animals WHERE id = ?", (animal_id,))
+        conn.commit()
+        conn.close()
+        return True
+
+    # Share allocation
+    def allocate_share(self, participant_id, animal_id):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        
+        # Get animal details
+        cursor.execute("SELECT remaining_shares, purchase_price, total_shares FROM animals WHERE id = ?", (animal_id,))
+        animal_data = cursor.fetchone()
+        if not animal_data or animal_data[0] <= 0:
+            conn.close()
+            return False, "No shares available"
+            
+        remaining, price, total_shares = animal_data
+        share_cost = price / total_shares
+
+        try:
+            # Allocate
             cursor.execute('''
                 INSERT INTO shares (participant_id, animal_id, share_number)
                 VALUES (?, ?, ?)
-            ''', (participant_id, animal_id, share_number))
+            ''', (participant_id, animal_id, total_shares - remaining + 1))
+            
+            # Update animal
             cursor.execute("UPDATE animals SET remaining_shares = remaining_shares - 1 WHERE id = ?", (animal_id,))
-            # Update participant shares
-            cursor.execute("UPDATE participants SET shares_purchased = shares_purchased + 1 WHERE id = ?", (participant_id,))
-            cursor.execute("UPDATE participants SET total_cost = shares_purchased * 2500 WHERE id = ?", (participant_id,))
+            
+            # Update participant
+            cursor.execute("UPDATE participants SET shares_purchased = shares_purchased + 1, total_cost = total_cost + ? WHERE id = ?", (share_cost, participant_id))
+            
             conn.commit()
-            success = True
-        else:
-            success = False
-        conn.close()
-        return success
+            return True, "Share allocated successfully"
+        except Exception as e:
+            return False, str(e)
+        finally:
+            conn.close()
 
     # Payment methods
-    def add_payment(self, participant_id, amount, status='completed'):
+    def add_payment(self, participant_id, amount):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO payments (participant_id, amount, status)
-            VALUES (?, ?, ?)
-        ''', (participant_id, amount, status))
-        payment_id = cursor.lastrowid
+            INSERT INTO payments (participant_id, amount)
+            VALUES (?, ?)
+        ''', (participant_id, amount))
+        
+        # Update participant paid amount
+        cursor.execute("UPDATE participants SET paid_amount = paid_amount + ? WHERE id = ?", (amount, participant_id))
+        
         conn.commit()
         conn.close()
-        return payment_id
+        return True
 
-    def get_payments(self, participant_id=None):
+    # Receipt methods
+    def create_receipt(self, participant_id, amount):
         conn = self.get_connection()
         cursor = conn.cursor()
-        if participant_id:
-            cursor.execute("SELECT * FROM payments WHERE participant_id = ?", (participant_id,))
-        else:
-            cursor.execute("SELECT * FROM payments")
+        # Generate receipt number: R-{YYYY}-{ID}-{Random/Count}
+        # Simple auto-increment logic via count for now, or just use DB ID after insert
+        count = cursor.execute("SELECT COUNT(*) FROM receipts").fetchone()[0] + 1
+        receipt_no = f"R-{datetime.now().year}-{count:04d}"
+        
+        cursor.execute('''
+            INSERT INTO receipts (receipt_no, participant_id, amount)
+            VALUES (?, ?, ?)
+        ''', (receipt_no, participant_id, amount))
+        
+        conn.commit()
+        conn.close()
+        return receipt_no
+
+    def verify_receipt(self, receipt_no):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT r.receipt_no, p.name, r.amount, r.date 
+            FROM receipts r
+            JOIN participants p ON r.participant_id = p.id
+            WHERE r.receipt_no = ?
+        ''', (receipt_no,))
+        row = cursor.fetchone()
+        conn.close()
+        return row
+
+    # Distribution
+    def get_distributions(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT p.id, p.name, p.phone, d.delivered, d.delivered_at
+            FROM participants p
+            LEFT JOIN distributions d ON p.id = d.participant_id
+        ''')
         rows = cursor.fetchall()
         conn.close()
         return rows
 
-    # Distribution
-    def mark_delivered(self, participant_id):
+    def toggle_delivery(self, participant_id):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute('''
-            UPDATE distributions
-            SET delivered = TRUE, delivered_at = ?
-            WHERE participant_id = ?
-        ''', (datetime.now().isoformat(), participant_id))
-        if cursor.rowcount == 0:
-            cursor.execute('''
-                INSERT INTO distributions (participant_id, delivered, delivered_at)
-                VALUES (?, TRUE, ?)
-            ''', (participant_id, datetime.now().isoformat()))
+        cursor.execute("SELECT delivered FROM distributions WHERE participant_id = ?", (participant_id,))
+        result = cursor.fetchone()
+        
+        if result and result[0]: # If delivered, mark undelivered
+            cursor.execute("UPDATE distributions SET delivered = FALSE, delivered_at = NULL WHERE participant_id = ?", (participant_id,))
+        else: # Mark delivered
+             cursor.execute('''
+                INSERT OR REPLACE INTO distributions (id, participant_id, delivered, delivered_at)
+                VALUES ((SELECT id FROM distributions WHERE participant_id = ?), ?, TRUE, ?)
+            ''', (participant_id, participant_id, datetime.now().isoformat()))
+        
         conn.commit()
         conn.close()
 
-    # Reports
-    def get_total_participants(self):
+    # Reports / Stats
+    def get_dashboard_stats(self):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM participants")
-        count = cursor.fetchone()[0]
+        
+        stats = {}
+        stats['participants'] = cursor.execute("SELECT COUNT(*) FROM participants").fetchone()[0]
+        stats['animals'] = cursor.execute("SELECT COUNT(*) FROM animals").fetchone()[0]
+        stats['shares_sold'] = cursor.execute("SELECT SUM(shares_purchased) FROM participants").fetchone()[0] or 0
+        stats['collected'] = cursor.execute("SELECT SUM(amount) FROM payments").fetchone()[0] or 0
+        stats['pending_shares'] = cursor.execute("SELECT SUM(remaining_shares) FROM animals").fetchone()[0] or 0
+        
         conn.close()
-        return count
-
-    def get_total_animals(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM animals")
-        count = cursor.fetchone()[0]
-        conn.close()
-        return count
-
-    def get_total_shares_sold(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT SUM(shares_purchased) FROM participants")
-        total = cursor.fetchone()[0] or 0
-        conn.close()
-        return total
-
-    def get_total_money_collected(self):
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT SUM(amount) FROM payments WHERE status = 'completed'")
-        total = cursor.fetchone()[0] or 0
-        conn.close()
-        return total
+        return stats
 
     # Backup
     def backup_database(self, backup_path):

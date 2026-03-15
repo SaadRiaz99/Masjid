@@ -6,6 +6,8 @@ from gui.participant_form import ParticipantForm
 from gui.animal_form import AnimalForm
 from gui.payment_form import PaymentForm
 from gui.allocate_form import AllocateForm
+from gui.report_window import ReportWindow
+from gui.styles import apply_styles
 from datetime import datetime
 import os
 
@@ -14,198 +16,382 @@ class MainWindow:
         self.root = root
         self.db = Database()
         self.pdf_gen = ReceiptGenerator()
+        
+        # Apply Styles
+        self.style = apply_styles(self.root)
+        
         self.create_widgets()
-        self.load_data()
+        self.load_dashboard_stats()
 
     def create_widgets(self):
-        self.root.title("Ijtimai Qurbani Management System")
-        self.root.geometry("800x600")
+        self.root.title("Ijtimai Qurbani Management System - Professional Edition")
+        self.root.geometry("1000x700")
 
-        # Menu
-        menubar = tk.Menu(self.root)
-        self.root.config(menu=menubar)
+        # Main Container
+        main_frame = ttk.Frame(self.root)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Backup Database", command=self.backup_db)
-        file_menu.add_command(label="Restore Database", command=self.restore_db)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.quit)
-
-        manage_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Manage", menu=manage_menu)
-        manage_menu.add_command(label="Add Participant", command=self.add_participant)
-        manage_menu.add_command(label="Add Animal", command=self.add_animal)
-        manage_menu.add_command(label="Allocate Share", command=self.allocate_share)
-        manage_menu.add_command(label="Record Payment", command=self.record_payment)
-
-        report_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="Reports", menu=report_menu)
-        report_menu.add_command(label="View Reports", command=self.view_reports)
-
-        # Dashboard
-        self.dashboard_frame = tk.Frame(self.root)
-        self.dashboard_frame.pack(fill=tk.BOTH, expand=True)
-
-        # Stats
-        stats_frame = tk.Frame(self.dashboard_frame)
-        stats_frame.pack(pady=10)
-
-        self.participants_label = tk.Label(stats_frame, text="Total Participants: 0", font=("Arial", 12))
-        self.participants_label.grid(row=0, column=0, padx=10)
-
-        self.animals_label = tk.Label(stats_frame, text="Total Animals: 0", font=("Arial", 12))
-        self.animals_label.grid(row=0, column=1, padx=10)
-
-        self.shares_label = tk.Label(stats_frame, text="Shares Sold: 0", font=("Arial", 12))
-        self.shares_label.grid(row=0, column=2, padx=10)
-
-        self.money_label = tk.Label(stats_frame, text="Money Collected: Rs. 0", font=("Arial", 12))
-        self.money_label.grid(row=0, column=3, padx=10)
+        # Header
+        header_frame = ttk.Frame(main_frame)
+        header_frame.pack(fill=tk.X, pady=(0, 10))
+        ttk.Label(header_frame, text="Ijtimai Qurbani Management System", style="Header.TLabel").pack(side=tk.LEFT)
+        ttk.Button(header_frame, text="Backup Database", command=self.backup_db).pack(side=tk.RIGHT)
 
         # Tabs
-        self.tab_control = ttk.Notebook(self.dashboard_frame)
-        self.tab_control.pack(fill=tk.BOTH, expand=True)
+        self.notebook = ttk.Notebook(main_frame)
+        self.notebook.pack(fill=tk.BOTH, expand=True)
 
-        # Participants Tab
-        self.participants_tab = ttk.Frame(self.tab_control)
-        self.tab_control.add(self.participants_tab, text="Participants")
+        # 1. Dashboard Tab
+        self.dashboard_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.dashboard_tab, text="Dashboard")
+        self.setup_dashboard(self.dashboard_tab)
 
-        self.participants_tree = ttk.Treeview(self.participants_tab, columns=("ID", "Name", "Phone", "Shares", "Cost"), show="headings")
-        self.participants_tree.heading("ID", text="ID")
-        self.participants_tree.heading("Name", text="Name")
-        self.participants_tree.heading("Phone", text="Phone")
-        self.participants_tree.heading("Shares", text="Shares")
-        self.participants_tree.heading("Cost", text="Total Cost")
-        self.participants_tree.pack(fill=tk.BOTH, expand=True)
+        # 2. Participants Tab
+        self.participants_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.participants_tab, text="Participants")
+        self.setup_participants_tab(self.participants_tab)
 
-        participants_buttons = tk.Frame(self.participants_tab)
-        participants_buttons.pack(fill=tk.X)
-        tk.Button(participants_buttons, text="Edit", command=self.edit_participant).pack(side=tk.LEFT, padx=5)
-        tk.Button(participants_buttons, text="Delete", command=self.delete_participant).pack(side=tk.LEFT, padx=5)
-        tk.Button(participants_buttons, text="Generate Receipt", command=self.generate_receipt).pack(side=tk.LEFT, padx=5)
-        tk.Button(participants_buttons, text="Mark Delivered", command=self.mark_delivered).pack(side=tk.LEFT, padx=5)
+        # 3. Animals Tab
+        self.animals_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.animals_tab, text="Animals")
+        self.setup_animals_tab(self.animals_tab)
 
-        # Animals Tab
-        self.animals_tab = ttk.Frame(self.tab_control)
-        self.tab_control.add(self.animals_tab, text="Animals")
+        # 4. Allocation & Payments Tab (Combined for workflow)
+        self.allocation_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.allocation_tab, text="Allocation & Payments")
+        self.setup_allocation_tab(self.allocation_tab)
 
-        self.animals_tree = ttk.Treeview(self.animals_tab, columns=("ID", "Type", "Price", "Total Shares", "Remaining"), show="headings")
-        self.animals_tree.heading("ID", text="ID")
-        self.animals_tree.heading("Type", text="Type")
-        self.animals_tree.heading("Price", text="Purchase Price")
-        self.animals_tree.heading("Total Shares", text="Total Shares")
-        self.animals_tree.heading("Remaining", text="Remaining Shares")
-        self.animals_tree.pack(fill=tk.BOTH, expand=True)
+        # 5. Receipt Verification Tab
+        self.verification_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.verification_tab, text="Verify Receipt")
+        self.setup_verification_tab(self.verification_tab)
 
+        # 6. Meat Distribution Tab
+        self.distribution_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.distribution_tab, text="Distribution")
+        self.setup_distribution_tab(self.distribution_tab)
+
+        # 7. Reports Tab
+        self.reports_tab = ttk.Frame(self.notebook)
+        self.notebook.add(self.reports_tab, text="Reports")
+        self.setup_reports_tab(self.reports_tab)
+
+        # Refresh data on tab change
+        self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
+
+    def on_tab_change(self, event):
+        tab_name = self.notebook.tab(self.notebook.select(), "text")
+        if tab_name == "Dashboard":
+            self.load_dashboard_stats()
+        elif tab_name == "Participants":
+            self.load_participants()
+        elif tab_name == "Animals":
+            self.load_animals()
+        elif tab_name == "Distribution":
+            self.load_distribution()
+
+    # --- Dashboard ---
+    def setup_dashboard(self, parent):
+        stats_frame = ttk.Frame(parent)
+        stats_frame.pack(fill=tk.X, pady=20)
+        
+        # Stats Cards
+        self.create_stat_card(stats_frame, "Total Participants", "0", 0)
+        self.create_stat_card(stats_frame, "Total Animals", "0", 1)
+        self.create_stat_card(stats_frame, "Shares Sold", "0", 2)
+        self.create_stat_card(stats_frame, "Money Collected", "Rs. 0", 3)
+        self.create_stat_card(stats_frame, "Pending Shares", "0", 4)
+
+        # Refresh Button
+        ttk.Button(parent, text="Refresh Dashboard", command=self.load_dashboard_stats).pack(pady=20)
+
+    def create_stat_card(self, parent, title, value, col):
+        card = ttk.Frame(parent, style="Card.TFrame", padding=15)
+        card.grid(row=0, column=col, padx=10, sticky="ew")
+        ttk.Label(card, text=title, font=("Segoe UI", 10)).pack()
+        label = ttk.Label(card, text=value, font=("Segoe UI", 14, "bold"), foreground="#4CAF50")
+        label.pack()
+        # Store reference to update later
+        setattr(self, f"stat_{title.lower().replace(' ', '_')}", label)
+
+    def load_dashboard_stats(self):
+        stats = self.db.get_dashboard_stats()
+        self.stat_total_participants.config(text=str(stats['participants']))
+        self.stat_total_animals.config(text=str(stats['animals']))
+        self.stat_shares_sold.config(text=str(stats['shares_sold']))
+        self.stat_money_collected.config(text=f"Rs. {stats['collected']:,.0f}")
+        self.stat_pending_shares.config(text=str(stats['pending_shares']))
+
+    # --- Participants ---
+    def setup_participants_tab(self, parent):
+        # Toolbar
+        toolbar = ttk.Frame(parent)
+        toolbar.pack(fill=tk.X, pady=5)
+        
+        ttk.Button(toolbar, text="Add Participant", command=self.add_participant).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="Edit Selected", command=self.edit_participant).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="Delete Selected", command=self.delete_participant, style="Danger.TButton").pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="Generate Receipt", command=self.generate_receipt).pack(side=tk.LEFT, padx=5)
+        
         # Search
-        search_frame = tk.Frame(self.dashboard_frame)
-        search_frame.pack(fill=tk.X, pady=5)
-        tk.Label(search_frame, text="Search:").pack(side=tk.LEFT)
-        self.search_entry = tk.Entry(search_frame)
-        self.search_entry.pack(side=tk.LEFT, fill=tk.X, expand=True)
-        tk.Button(search_frame, text="Search", command=self.search_participants).pack(side=tk.LEFT)
+        ttk.Label(toolbar, text="Search:").pack(side=tk.LEFT, padx=(20, 5))
+        self.search_var = tk.StringVar()
+        self.search_var.trace("w", lambda *args: self.load_participants())
+        ttk.Entry(toolbar, textvariable=self.search_var).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-    def load_data(self):
-        # Load stats
-        self.participants_label.config(text=f"Total Participants: {self.db.get_total_participants()}")
-        self.animals_label.config(text=f"Total Animals: {self.db.get_total_animals()}")
-        self.shares_label.config(text=f"Shares Sold: {self.db.get_total_shares_sold()}")
-        self.money_label.config(text=f"Money Collected: Rs. {self.db.get_total_money_collected()}")
+        # Treeview
+        cols = ("ID", "Name", "Phone", "CNIC", "Shares", "Total Cost", "Paid", "Balance")
+        self.part_tree = ttk.Treeview(parent, columns=cols, show="headings")
+        for col in cols:
+            self.part_tree.heading(col, text=col)
+            self.part_tree.column(col, width=100)
+        self.part_tree.pack(fill=tk.BOTH, expand=True)
 
-        # Load participants
-        for row in self.participants_tree.get_children():
-            self.participants_tree.delete(row)
-        for participant in self.db.get_participants():
-            self.participants_tree.insert("", tk.END, values=participant)
-
-        # Load animals
-        for row in self.animals_tree.get_children():
-            self.animals_tree.delete(row)
-        for animal in self.db.get_animals():
-            self.animals_tree.insert("", tk.END, values=animal)
+    def load_participants(self):
+        query = self.search_var.get()
+        for row in self.part_tree.get_children():
+            self.part_tree.delete(row)
+        for p in self.db.get_participants(query):
+            # p = (id, name, phone, address, cnic, shares, total, paid, created)
+            # Calculate balance
+            balance = p[6] - p[7]  # total - paid
+            self.part_tree.insert("", tk.END, values=(p[0], p[1], p[2], p[4], p[5], f"{p[6]:,.0f}", f"{p[7]:,.0f}", f"{balance:,.0f}"))
 
     def add_participant(self):
-        ParticipantForm(self.root, self.db, self.load_data)
-
-    def add_animal(self):
-        AnimalForm(self.root, self.db, self.load_data)
-
-    def allocate_share(self):
-        AllocateForm(self.root, self.db, self.load_data)
-
-    def record_payment(self):
-        PaymentForm(self.root, self.db, self.load_data)
-
-    def view_reports(self):
-        ReportWindow(self.root, self.db)
+        ParticipantForm(self.root, self.db, self.load_participants)
 
     def edit_participant(self):
-        selected = self.participants_tree.selection()
-        if selected:
-            item = self.participants_tree.item(selected[0])
-            participant_id = item['values'][0]
-            ParticipantForm(self.root, self.db, self.load_data, participant_id)
+        sel = self.part_tree.selection()
+        if sel:
+            pid = self.part_tree.item(sel[0])['values'][0]
+            ParticipantForm(self.root, self.db, self.load_participants, pid)
         else:
-            messagebox.showwarning("Warning", "Select a participant to edit")
+            messagebox.showwarning("Warning", "Select a participant")
 
     def delete_participant(self):
-        selected = self.participants_tree.selection()
-        if selected:
-            item = self.participants_tree.item(selected[0])
-            participant_id = item['values'][0]
-            if messagebox.askyesno("Confirm", "Delete this participant?"):
-                self.db.delete_participant(participant_id)
-                self.load_data()
+        sel = self.part_tree.selection()
+        if sel:
+            pid = self.part_tree.item(sel[0])['values'][0]
+            if messagebox.askyesno("Confirm", "Delete this participant? This action cannot be undone."):
+                self.db.delete_participant(pid)
+                self.load_participants()
         else:
-            messagebox.showwarning("Warning", "Select a participant to delete")
+            messagebox.showwarning("Warning", "Select a participant")
 
     def generate_receipt(self):
-        selected = self.participants_tree.selection()
-        if selected:
-            item = self.participants_tree.item(selected[0])
-            participant_id = item['values'][0]
-            name = item['values'][1]
-            phone = item['values'][2]
-            shares = item['values'][3]
-            cost = item['values'][4]
-            # Assume share price is fixed, say 2500 per share
-            share_price = 2500
+        sel = self.part_tree.selection()
+        if sel:
+            item = self.part_tree.item(sel[0])['values']
+            pid = item[0]
+            name = item[1]
+            phone = item[2]
+            shares = item[4]
+            paid = float(str(item[6]).replace(',', ''))
+            
+            if paid <= 0:
+                messagebox.showwarning("Warning", "Cannot generate receipt for 0 payment.")
+                return
+
+            # Generate Receipt Number and Record in DB
+            receipt_no = self.db.create_receipt(pid, paid)
+            
             receipt_data = {
-                'mosque_name': 'Masjid-e-Example',
-                'receipt_number': f"R{participant_id:03d}",
+                'mosque_name': 'Jamia Masjid Qurbani Center',
+                'receipt_number': receipt_no,
                 'participant_name': name,
                 'phone': phone,
                 'shares': shares,
-                'amount_paid': cost,
-                'date': datetime.now().strftime('%Y-%m-%d')
+                'amount_paid': paid,
+                'date': datetime.now().strftime('%Y-%m-%d %H:%M')
             }
-            output_path = f"receipt_{participant_id}.pdf"
+            
+            # Create receipts folder
+            if not os.path.exists("receipts"):
+                os.makedirs("receipts")
+                
+            output_path = f"receipts/Receipt_{receipt_no}.pdf"
             self.pdf_gen.generate_receipt(receipt_data, output_path)
-            messagebox.showinfo("Success", f"Receipt saved as {output_path}")
-            # Print
-            self.pdf_gen.print_receipt(output_path)
+            
+            if messagebox.askyesno("Success", f"Receipt generated: {output_path}\nDo you want to print it now?"):
+                self.pdf_gen.print_receipt(output_path)
         else:
             messagebox.showwarning("Warning", "Select a participant")
 
-    def mark_delivered(self):
-        selected = self.participants_tree.selection()
-        if selected:
-            item = self.participants_tree.item(selected[0])
-            participant_id = item['values'][0]
-            self.db.mark_delivered(participant_id)
-            messagebox.showinfo("Success", "Marked as delivered")
+    # --- Animals ---
+    def setup_animals_tab(self, parent):
+        toolbar = ttk.Frame(parent)
+        toolbar.pack(fill=tk.X, pady=5)
+        ttk.Button(toolbar, text="Add New Animal", command=self.add_animal).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="Edit Selected", command=self.edit_animal).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="Delete Animal", command=self.delete_animal, style="Danger.TButton").pack(side=tk.LEFT, padx=5)
+
+        cols = ("ID", "Type", "Price", "Seller", "Total Shares", "Remaining")
+        self.animal_tree = ttk.Treeview(parent, columns=cols, show="headings")
+        for col in cols:
+            self.animal_tree.heading(col, text=col)
+        self.animal_tree.pack(fill=tk.BOTH, expand=True)
+        self.load_animals()
+
+    def load_animals(self):
+        for row in self.animal_tree.get_children():
+            self.animal_tree.delete(row)
+        for a in self.db.get_animals():
+            self.animal_tree.insert("", tk.END, values=(a[0], a[1], f"{a[2]:,.0f}", a[3], a[4], a[5]))
+
+    def add_animal(self):
+        AnimalForm(self.root, self.db, self.load_animals)
+
+    def delete_animal(self):
+        sel = self.animal_tree.selection()
+        if sel:
+            aid = self.animal_tree.item(sel[0])['values'][0]
+            if messagebox.askyesno("Confirm", "Delete this animal?"):
+                success = self.db.delete_animal(aid)
+                if success:
+                    self.load_animals()
+                else:
+                    messagebox.showerror("Error", "Cannot delete animal with allocated shares.")
+        else:
+            messagebox.showwarning("Warning", "Select an animal")
+
+    # --- Allocation & Payments ---
+    def setup_allocation_tab(self, parent):
+        frame = ttk.Frame(parent, padding=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        # Split into two columns
+        left_frame = ttk.LabelFrame(frame, text="Allocate Share", padding=10)
+        left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
+        
+        right_frame = ttk.LabelFrame(frame, text="Record Payment", padding=10)
+        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10)
+
+        # Allocation
+        ttk.Label(left_frame, text="Use the dedicated form to allocate shares.").pack(pady=10)
+        ttk.Button(left_frame, text="Open Allocation Form", command=self.open_allocate_form).pack(pady=10)
+
+        # Payment
+        ttk.Label(right_frame, text="Record payments for participants.").pack(pady=10)
+        ttk.Button(right_frame, text="Open Payment Form", command=self.open_payment_form).pack(pady=10)
+
+    def open_allocate_form(self):
+        AllocateForm(self.root, self.db, self.load_dashboard_stats)
+
+    def open_payment_form(self):
+        PaymentForm(self.root, self.db, self.load_dashboard_stats)
+
+    # --- Verification ---
+    def setup_verification_tab(self, parent):
+        frame = ttk.Frame(parent, padding=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(frame, text="Enter Receipt Number:", style="SubHeader.TLabel").pack(pady=10)
+        self.verify_entry = ttk.Entry(frame, font=("Arial", 14))
+        self.verify_entry.pack(pady=5, ipadx=50)
+        
+        ttk.Button(frame, text="Verify Receipt", command=self.verify_receipt).pack(pady=10)
+
+        self.verify_result_frame = ttk.Frame(frame, style="Card.TFrame", padding=20)
+        self.verify_result_frame.pack(pady=20, fill=tk.X)
+        self.verify_result_label = ttk.Label(self.verify_result_frame, text="Enter a number to verify.", font=("Arial", 12))
+        self.verify_result_label.pack()
+
+    def verify_receipt(self):
+        receipt_no = self.verify_entry.get().strip()
+        if not receipt_no:
+            return
+        
+        result = self.db.verify_receipt(receipt_no)
+        
+        for widget in self.verify_result_frame.winfo_children():
+            widget.destroy()
+
+        if result:
+            # Valid
+            self.verify_result_frame.configure(style="Card.TFrame") # Reset or set green border style if possible
+            tk.Label(self.verify_result_frame, text="✔ VALID RECEIPT", fg="green", font=("Arial", 18, "bold"), bg="white").pack()
+            ttk.Label(self.verify_result_frame, text=f"Receipt No: {result[0]}").pack()
+            ttk.Label(self.verify_result_frame, text=f"Participant: {result[1]}").pack()
+            ttk.Label(self.verify_result_frame, text=f"Amount: Rs. {result[2]:,.0f}").pack()
+            ttk.Label(self.verify_result_frame, text=f"Date: {result[3]}").pack()
+        else:
+            # Invalid
+            tk.Label(self.verify_result_frame, text="✘ INVALID / FAKE RECEIPT", fg="red", font=("Arial", 18, "bold"), bg="white").pack()
+            ttk.Label(self.verify_result_frame, text=f"No record found for: {receipt_no}").pack()
+
+    # --- Distribution ---
+    def setup_distribution_tab(self, parent):
+        toolbar = ttk.Frame(parent)
+        toolbar.pack(fill=tk.X, pady=5)
+        ttk.Button(toolbar, text="Mark Delivered / Undelivered", command=self.toggle_delivery).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text="Refresh List", command=self.load_distribution).pack(side=tk.LEFT, padx=5)
+
+        cols = ("ID", "Name", "Phone", "Status", "Time")
+        self.dist_tree = ttk.Treeview(parent, columns=cols, show="headings")
+        for col in cols:
+            self.dist_tree.heading(col, text=col)
+        self.dist_tree.pack(fill=tk.BOTH, expand=True)
+
+    def load_distribution(self):
+        for row in self.dist_tree.get_children():
+            self.dist_tree.delete(row)
+        for d in self.db.get_distributions():
+            # d = (id, name, phone, delivered, delivered_at)
+            status = "DELIVERED" if d[3] else "Pending"
+            time = d[4] if d[4] else "-"
+            # Color code? Treeview tags needed for color
+            self.dist_tree.insert("", tk.END, values=(d[0], d[1], d[2], status, time))
+
+    def toggle_delivery(self):
+        sel = self.dist_tree.selection()
+        if sel:
+            pid = self.dist_tree.item(sel[0])['values'][0]
+            self.db.toggle_delivery(pid)
+            self.load_distribution()
         else:
             messagebox.showwarning("Warning", "Select a participant")
 
-    def search_participants(self):
-        query = self.search_entry.get()
-        # Simple search by name
-        for row in self.participants_tree.get_children():
-            self.participants_tree.delete(row)
-        for participant in self.db.get_participants():
-            if query.lower() in participant[1].lower():
-                self.participants_tree.insert("", tk.END, values=participant)
+    # --- Reports ---
+    def setup_reports_tab(self, parent):
+        frame = ttk.Frame(parent, padding=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(frame, text="Generate Reports", style="SubHeader.TLabel").pack(pady=10)
+        
+        ttk.Button(frame, text="Export Participants List (Excel)", command=lambda: self.export_report("participants")).pack(pady=5, fill=tk.X)
+        ttk.Button(frame, text="Export Financial Report (Excel)", command=lambda: self.export_report("finance")).pack(pady=5, fill=tk.X)
+        
+    def export_report(self, report_type):
+        # Placeholder for export logic. Can use openpyxl or pandas.
+        # Since requirements.txt has openpyxl
+        try:
+            import openpyxl
+            wb = openpyxl.Workbook()
+            ws = wb.active
+            
+            save_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
+            if not save_path:
+                return
+
+            if report_type == "participants":
+                ws.append(["ID", "Name", "Phone", "CNIC", "Shares", "Total Cost", "Paid", "Balance"])
+                for p in self.db.get_participants():
+                     ws.append([p[0], p[1], p[2], p[4], p[5], p[6], p[7], p[6]-p[7]])
+            
+            elif report_type == "finance":
+                ws.append(["Receipt No", "Participant", "Amount", "Date"])
+                # Ideally fetch receipts join participants
+                conn = self.db.get_connection()
+                rows = conn.execute("SELECT r.receipt_no, p.name, r.amount, r.date FROM receipts r JOIN participants p ON r.participant_id = p.id").fetchall()
+                conn.close()
+                for r in rows:
+                    ws.append(list(r))
+            
+            wb.save(save_path)
+            messagebox.showinfo("Success", f"Report saved to {save_path}")
+            
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
     def backup_db(self):
         backup_path = filedialog.asksaveasfilename(defaultextension=".db", filetypes=[("Database files", "*.db")])
@@ -217,5 +403,5 @@ class MainWindow:
         backup_path = filedialog.askopenfilename(filetypes=[("Database files", "*.db")])
         if backup_path:
             self.db.restore_database(backup_path)
-            self.load_data()
+            self.load_dashboard_stats()
             messagebox.showinfo("Success", "Database restored")

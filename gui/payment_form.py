@@ -22,13 +22,8 @@ class PaymentForm:
         self.amount_entry = tk.Entry(self.top)
         self.amount_entry.grid(row=1, column=1, padx=10, pady=5)
 
-        tk.Label(self.top, text="Status:").grid(row=2, column=0, padx=10, pady=5)
-        self.status_var = tk.StringVar(value="completed")
-        self.status_combo = ttk.Combobox(self.top, textvariable=self.status_var, values=["completed", "pending"])
-        self.status_combo.grid(row=2, column=1, padx=10, pady=5)
-
-        tk.Button(self.top, text="Save", command=self.save).grid(row=3, column=0, pady=10)
-        tk.Button(self.top, text="Cancel", command=self.top.destroy).grid(row=3, column=1, pady=10)
+        tk.Button(self.top, text="Save", command=self.save).grid(row=2, column=0, pady=20)
+        tk.Button(self.top, text="Cancel", command=self.top.destroy).grid(row=2, column=1, pady=20)
 
     def save(self):
         participant_str = self.participant_var.get()
@@ -36,11 +31,17 @@ class PaymentForm:
             messagebox.showerror("Error", "Select a participant")
             return
         participant_id = int(participant_str.split(' - ')[0])
-        amount = float(self.amount_entry.get() or 0)
-        status = self.status_var.get()
+        try:
+            amount = float(self.amount_entry.get() or 0)
+        except ValueError:
+            messagebox.showerror("Error", "Invalid amount")
+            return
+            
         if amount <= 0:
             messagebox.showerror("Error", "Amount must be positive")
             return
-        self.db.add_payment(participant_id, amount, status)
+        
+        self.db.add_payment(participant_id, amount)
+        messagebox.showinfo("Success", "Payment recorded")
         self.refresh_callback()
         self.top.destroy()

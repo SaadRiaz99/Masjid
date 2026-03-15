@@ -24,25 +24,23 @@ class AllocateForm:
         self.animal_combo['values'] = [f"{a[0]} - {a[1]} ({a[5]} remaining)" for a in self.db.get_animals()]
         self.animal_combo.grid(row=1, column=1, padx=10, pady=5)
 
-        tk.Label(self.top, text="Share Number:").grid(row=2, column=0, padx=10, pady=5)
-        self.share_entry = tk.Entry(self.top)
-        self.share_entry.grid(row=2, column=1, padx=10, pady=5)
-
-        tk.Button(self.top, text="Allocate", command=self.allocate).grid(row=3, column=0, pady=10)
-        tk.Button(self.top, text="Cancel", command=self.top.destroy).grid(row=3, column=1, pady=10)
+        tk.Button(self.top, text="Allocate", command=self.allocate).grid(row=2, column=0, pady=20)
+        tk.Button(self.top, text="Cancel", command=self.top.destroy).grid(row=2, column=1, pady=20)
 
     def allocate(self):
         participant_str = self.participant_var.get()
         animal_str = self.animal_var.get()
-        share_num = int(self.share_entry.get() or 0)
-        if not participant_str or not animal_str or share_num <= 0:
+        if not participant_str or not animal_str:
             messagebox.showerror("Error", "All fields required")
             return
+        
         participant_id = int(participant_str.split(' - ')[0])
         animal_id = int(animal_str.split(' - ')[0])
-        if self.db.allocate_share(participant_id, animal_id, share_num):
-            messagebox.showinfo("Success", "Share allocated")
+        
+        success, message = self.db.allocate_share(participant_id, animal_id)
+        if success:
+            messagebox.showinfo("Success", message)
             self.refresh_callback()
             self.top.destroy()
         else:
-            messagebox.showerror("Error", "No shares available")
+            messagebox.showerror("Error", message)
