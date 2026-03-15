@@ -1,5 +1,6 @@
 from fpdf import FPDF
 import os
+from utils.config import ConfigManager
 
 class ReceiptGenerator:
     def __init__(self):
@@ -21,6 +22,17 @@ class ReceiptGenerator:
         pdf.add_page()
         pdf.set_auto_page_break(auto=True, margin=15)
         
+        # Background Image (Watermark)
+        bg_path = ConfigManager.get("receipt_bg_path")
+        if bg_path and os.path.exists(bg_path):
+            # Add image to cover the page (A5 size: 148 x 210 mm)
+            # Use as watermark with low opacity is not directly supported in standard FPDF 1.7.2
+            # So we just place it. Ideally, user provides a light image.
+            try:
+                pdf.image(bg_path, x=0, y=0, w=148, h=210)
+            except Exception:
+                pass # Ignore if image format is not supported
+
         # Border
         pdf.set_line_width(1)
         pdf.rect(5, 5, 138, 200)
@@ -35,7 +47,8 @@ class ReceiptGenerator:
         
         # Title
         pdf.set_font("Arial", 'B', 14)
-        pdf.set_fill_color(220, 220, 220)
+        # Check if we should use fill (might cover bg) - let's keep it transparent or minimal
+        pdf.set_fill_color(220, 220, 220) 
         pdf.cell(0, 10, txt="OFFICIAL RECEIPT", ln=True, align='C', fill=True)
         pdf.ln(5)
 

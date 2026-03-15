@@ -376,3 +376,13 @@ class Database:
         user = cursor.fetchone()
         conn.close()
         return user is not None
+
+    def update_admin_password(self, username, new_password):
+        import hashlib
+        password_hash = hashlib.sha256(new_password.encode()).hexdigest()
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("UPDATE admins SET password_hash = ? WHERE username = ?", (password_hash, username))
+        conn.commit()
+        conn.close()
+        return True

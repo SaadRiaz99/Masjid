@@ -1,5 +1,329 @@
 ('D:\\python\\Qurbani Project\\build\\QurbaniManagementSystem\\PYZ-00.pyz',
- [('__future__',
+ [('PIL',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\__init__.py',
+   'PYMODULE'),
+  ('PIL.AvifImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\AvifImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.BlpImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\BlpImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.BmpImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\BmpImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.BufrStubImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\BufrStubImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.CurImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\CurImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.DcxImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\DcxImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.DdsImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\DdsImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.EpsImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\EpsImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.ExifTags',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ExifTags.py',
+   'PYMODULE'),
+  ('PIL.FitsImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\FitsImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.FliImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\FliImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.FpxImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\FpxImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.FtexImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\FtexImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.GbrImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\GbrImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.GifImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\GifImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.GimpGradientFile',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\GimpGradientFile.py',
+   'PYMODULE'),
+  ('PIL.GimpPaletteFile',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\GimpPaletteFile.py',
+   'PYMODULE'),
+  ('PIL.GribStubImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\GribStubImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.Hdf5StubImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\Hdf5StubImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.IcnsImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\IcnsImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.IcoImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\IcoImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.ImImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.Image',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\Image.py',
+   'PYMODULE'),
+  ('PIL.ImageChops',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageChops.py',
+   'PYMODULE'),
+  ('PIL.ImageCms',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageCms.py',
+   'PYMODULE'),
+  ('PIL.ImageColor',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageColor.py',
+   'PYMODULE'),
+  ('PIL.ImageDraw',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageDraw.py',
+   'PYMODULE'),
+  ('PIL.ImageDraw2',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageDraw2.py',
+   'PYMODULE'),
+  ('PIL.ImageFile',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageFile.py',
+   'PYMODULE'),
+  ('PIL.ImageFilter',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageFilter.py',
+   'PYMODULE'),
+  ('PIL.ImageFont',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageFont.py',
+   'PYMODULE'),
+  ('PIL.ImageMath',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageMath.py',
+   'PYMODULE'),
+  ('PIL.ImageMode',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageMode.py',
+   'PYMODULE'),
+  ('PIL.ImageOps',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageOps.py',
+   'PYMODULE'),
+  ('PIL.ImagePalette',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImagePalette.py',
+   'PYMODULE'),
+  ('PIL.ImagePath',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImagePath.py',
+   'PYMODULE'),
+  ('PIL.ImageQt',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageQt.py',
+   'PYMODULE'),
+  ('PIL.ImageSequence',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageSequence.py',
+   'PYMODULE'),
+  ('PIL.ImageShow',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageShow.py',
+   'PYMODULE'),
+  ('PIL.ImageText',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageText.py',
+   'PYMODULE'),
+  ('PIL.ImageTk',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageTk.py',
+   'PYMODULE'),
+  ('PIL.ImageWin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImageWin.py',
+   'PYMODULE'),
+  ('PIL.ImtImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\ImtImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.IptcImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\IptcImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.Jpeg2KImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\Jpeg2KImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.JpegImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\JpegImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.JpegPresets',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\JpegPresets.py',
+   'PYMODULE'),
+  ('PIL.McIdasImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\McIdasImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.MicImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\MicImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.MpegImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\MpegImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.MpoImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\MpoImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.MspImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\MspImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.PaletteFile',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PaletteFile.py',
+   'PYMODULE'),
+  ('PIL.PalmImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PalmImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.PcdImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PcdImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.PcxImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PcxImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.PdfImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PdfImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.PdfParser',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PdfParser.py',
+   'PYMODULE'),
+  ('PIL.PixarImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PixarImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.PngImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PngImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.PpmImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PpmImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.PsdImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\PsdImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.QoiImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\QoiImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.SgiImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\SgiImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.SpiderImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\SpiderImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.SunImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\SunImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.TgaImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\TgaImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.TiffImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\TiffImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.TiffTags',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\TiffTags.py',
+   'PYMODULE'),
+  ('PIL.WebPImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\WebPImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.WmfImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\WmfImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.XVThumbImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\XVThumbImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.XbmImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\XbmImagePlugin.py',
+   'PYMODULE'),
+  ('PIL.XpmImagePlugin',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\XpmImagePlugin.py',
+   'PYMODULE'),
+  ('PIL._binary',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\_binary.py',
+   'PYMODULE'),
+  ('PIL._deprecate',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\_deprecate.py',
+   'PYMODULE'),
+  ('PIL._typing',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\_typing.py',
+   'PYMODULE'),
+  ('PIL._util',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\_util.py',
+   'PYMODULE'),
+  ('PIL._version',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\_version.py',
+   'PYMODULE'),
+  ('PIL.features',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\PIL\\features.py',
+   'PYMODULE'),
+  ('__future__',
    'C:\\Users\\Muhammad '
    'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\__future__.py',
    'PYMODULE'),
@@ -82,6 +406,10 @@
   ('codeop',
    'C:\\Users\\Muhammad '
    'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\codeop.py',
+   'PYMODULE'),
+  ('colorsys',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\colorsys.py',
    'PYMODULE'),
   ('compression',
    'C:\\Users\\Muhammad '
@@ -294,6 +622,9 @@
    'PYMODULE'),
   ('gui.animal_form',
    'D:\\python\\Qurbani Project\\gui\\animal_form.py',
+   'PYMODULE'),
+  ('gui.change_password_dialog',
+   'D:\\python\\Qurbani Project\\gui\\change_password_dialog.py',
    'PYMODULE'),
   ('gui.login_window',
    'D:\\python\\Qurbani Project\\gui\\login_window.py',
@@ -1202,6 +1533,82 @@
    'C:\\Users\\Muhammad '
    'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\py_compile.py',
    'PYMODULE'),
+  ('qrcode',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\__init__.py',
+   'PYMODULE'),
+  ('qrcode.LUT',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\LUT.py',
+   'PYMODULE'),
+  ('qrcode.base',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\base.py',
+   'PYMODULE'),
+  ('qrcode.compat',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\compat\\__init__.py',
+   'PYMODULE'),
+  ('qrcode.compat.png',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\compat\\png.py',
+   'PYMODULE'),
+  ('qrcode.constants',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\constants.py',
+   'PYMODULE'),
+  ('qrcode.exceptions',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\exceptions.py',
+   'PYMODULE'),
+  ('qrcode.image',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\__init__.py',
+   'PYMODULE'),
+  ('qrcode.image.base',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\base.py',
+   'PYMODULE'),
+  ('qrcode.image.pil',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\pil.py',
+   'PYMODULE'),
+  ('qrcode.image.pure',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\pure.py',
+   'PYMODULE'),
+  ('qrcode.image.styledpil',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\styledpil.py',
+   'PYMODULE'),
+  ('qrcode.image.styles',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\styles\\__init__.py',
+   'PYMODULE'),
+  ('qrcode.image.styles.colormasks',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\styles\\colormasks.py',
+   'PYMODULE'),
+  ('qrcode.image.styles.moduledrawers',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\styles\\moduledrawers\\__init__.py',
+   'PYMODULE'),
+  ('qrcode.image.styles.moduledrawers.base',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\styles\\moduledrawers\\base.py',
+   'PYMODULE'),
+  ('qrcode.image.styles.moduledrawers.pil',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\image\\styles\\moduledrawers\\pil.py',
+   'PYMODULE'),
+  ('qrcode.main',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\main.py',
+   'PYMODULE'),
+  ('qrcode.util',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages\\qrcode\\util.py',
+   'PYMODULE'),
   ('quopri',
    'C:\\Users\\Muhammad '
    'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\quopri.py',
@@ -1213,6 +1620,10 @@
   ('selectors',
    'C:\\Users\\Muhammad '
    'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\selectors.py',
+   'PYMODULE'),
+  ('shlex',
+   'C:\\Users\\Muhammad '
+   'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\shlex.py',
    'PYMODULE'),
   ('shutil',
    'C:\\Users\\Muhammad '
@@ -1345,6 +1756,11 @@
   ('urllib.response',
    'C:\\Users\\Muhammad '
    'Talha\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\urllib\\response.py',
+   'PYMODULE'),
+  ('utils', '-', 'PYMODULE'),
+  ('utils.config', 'D:\\python\\Qurbani Project\\utils\\config.py', 'PYMODULE'),
+  ('utils.localization',
+   'D:\\python\\Qurbani Project\\utils\\localization.py',
    'PYMODULE'),
   ('xml',
    'C:\\Users\\Muhammad '

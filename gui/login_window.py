@@ -27,7 +27,7 @@ class LoginWindow:
         username = self.username_entry.get()
         password = self.password_entry.get()
         if self.db.authenticate_admin(username, password):
-            self.root.destroy()
+            # Don't destroy the root, just signal success
             self.on_login_success()
         else:
             messagebox.showerror("Error", "Invalid credentials")
