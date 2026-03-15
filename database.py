@@ -37,6 +37,7 @@ class Database:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 animal_type TEXT NOT NULL,  -- cow, goat, camel
                 purchase_price REAL NOT NULL,
+                actual_buy_price REAL DEFAULT 0.0,
                 seller_details TEXT,
                 total_shares INTEGER NOT NULL,
                 remaining_shares INTEGER NOT NULL,
@@ -114,6 +115,12 @@ class Database:
         except sqlite3.OperationalError:
             cursor.execute("ALTER TABLE participants ADD COLUMN paid_amount REAL DEFAULT 0.0")
 
+        # Migration: Add actual_buy_price to animals if missing
+        try:
+            cursor.execute("SELECT actual_buy_price FROM animals LIMIT 1")
+        except sqlite3.OperationalError:
+            cursor.execute("ALTER TABLE animals ADD COLUMN actual_buy_price REAL DEFAULT 0.0")
+
         conn.commit()
         conn.close()
 
@@ -176,13 +183,13 @@ class Database:
         conn.close()
 
     # Animal methods
-    def add_animal(self, animal_type, purchase_price, seller_details, total_shares):
+    def add_animal(self, animal_type, purchase_price, seller_details, total_shares, actual_buy_price=0.0):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO animals (animal_type, purchase_price, seller_details, total_shares, remaining_shares)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (animal_type, purchase_price, seller_details, total_shares, total_shares))
+            INSERT INTO animals (animal_type, purchase_price, seller_details, total_shares, remaining_shares, actual_buy_price)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (animal_type, purchase_price, seller_details, total_shares, total_shares, actual_buy_price))
         animal_id = cursor.lastrowid
         conn.commit()
         conn.close()
@@ -204,16 +211,16 @@ class Database:
         conn.close()
         return row
 
-    def update_animal(self, animal_id, animal_type, price, seller, total_shares):
+    def update_animal(self, animal_id, animal_type, price, seller, total_shares, actual_buy_price=0.0):
         conn = self.get_connection()
         cursor = conn.cursor()
         # Note: updating total shares might be tricky if some are allocated.
         # For simplicity, we update basic info.
         cursor.execute('''
             UPDATE animals
-            SET animal_type = ?, purchase_price = ?, seller_details = ?, total_shares = ?
+            SET animal_type = ?, purchase_price = ?, seller_details = ?, total_shares = ?, actual_buy_price = ?
             WHERE id = ?
-        ''', (animal_type, price, seller, total_shares, animal_id))
+        ''', (animal_type, price, seller, total_shares, actual_buy_price, animal_id))
         conn.commit()
         conn.close()
         
@@ -236,14 +243,17 @@ class Database:
         cursor = conn.cursor()
         
         # Get animal details
-        cursor.execute("SELECT remaining_shares, purchase_price, total_shares FROM animals WHERE id = ?", (animal_id,))
+        cursor.execute("SELECT remaining_shares, purchase_price, total_shares, actual_buy_price FROM animals WHERE id = ?", (animal_id,))
         animal_data = cursor.fetchone()
         if not animal_data or animal_data[0] <= 0:
             conn.close()
             return False, "No shares available"
             
-        remaining, price, total_shares = animal_data
-        share_cost = price / total_shares
+        remaining, price, total_shares, actual_price = animal_data
+        
+        # Use actual price if set, otherwise estimated price
+        cost_basis = actual_price if actual_price > 0 else price
+        share_cost = cost_basis / total_shares
 
         try:
             # Allocate

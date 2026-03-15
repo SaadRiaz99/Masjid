@@ -20,34 +20,42 @@ class AnimalForm:
         self.type_combo = ttk.Combobox(self.top, textvariable=self.type_var, values=["cow", "goat", "camel"])
         self.type_combo.grid(row=0, column=1, padx=10, pady=5)
 
-        tk.Label(self.top, text="Purchase Price:").grid(row=1, column=0, padx=10, pady=5)
+        tk.Label(self.top, text="Total/Est. Price:").grid(row=1, column=0, padx=10, pady=5)
         self.price_entry = tk.Entry(self.top)
         self.price_entry.grid(row=1, column=1, padx=10, pady=5)
 
-        tk.Label(self.top, text="Seller Details:").grid(row=2, column=0, padx=10, pady=5)
+        tk.Label(self.top, text="Actual Buy Price:").grid(row=2, column=0, padx=10, pady=5)
+        self.actual_price_entry = tk.Entry(self.top)
+        self.actual_price_entry.grid(row=2, column=1, padx=10, pady=5)
+
+        tk.Label(self.top, text="Seller Details:").grid(row=3, column=0, padx=10, pady=5)
         self.seller_entry = tk.Entry(self.top)
-        self.seller_entry.grid(row=2, column=1, padx=10, pady=5)
+        self.seller_entry.grid(row=3, column=1, padx=10, pady=5)
 
-        tk.Label(self.top, text="Total Shares:").grid(row=3, column=0, padx=10, pady=5)
+        tk.Label(self.top, text="Total Shares:").grid(row=4, column=0, padx=10, pady=5)
         self.shares_entry = tk.Entry(self.top)
-        self.shares_entry.grid(row=3, column=1, padx=10, pady=5)
+        self.shares_entry.grid(row=4, column=1, padx=10, pady=5)
 
-        tk.Button(self.top, text="Save", command=self.save).grid(row=4, column=0, pady=20)
-        tk.Button(self.top, text="Cancel", command=self.top.destroy).grid(row=4, column=1, pady=20)
+        tk.Button(self.top, text="Save", command=self.save).grid(row=5, column=0, pady=20)
+        tk.Button(self.top, text="Cancel", command=self.top.destroy).grid(row=5, column=1, pady=20)
 
     def load_animal(self):
         a = self.db.get_animal(self.animal_id)
         if a:
-            # a = (id, type, price, seller, total, remaining, date)
+            # a = (id, type, price, actual_price, seller, total, remaining, date)
+            # Note: Index might shift if schema changed.
+            # Schema: id, type, price, actual_buy_price, seller, total, remaining, date
             self.type_var.set(a[1])
             self.price_entry.insert(0, str(a[2]))
-            self.seller_entry.insert(0, str(a[3]))
-            self.shares_entry.insert(0, str(a[4]))
+            self.actual_price_entry.insert(0, str(a[3]))
+            self.seller_entry.insert(0, str(a[4]))
+            self.shares_entry.insert(0, str(a[5]))
 
     def save(self):
         animal_type = self.type_var.get()
         try:
             price = float(self.price_entry.get() or 0)
+            actual_price = float(self.actual_price_entry.get() or 0)
             shares = int(self.shares_entry.get() or 0)
         except ValueError:
             messagebox.showerror("Error", "Invalid price or shares")
@@ -60,10 +68,10 @@ class AnimalForm:
             return
             
         if self.animal_id:
-            self.db.update_animal(self.animal_id, animal_type, price, seller, shares)
+            self.db.update_animal(self.animal_id, animal_type, price, seller, shares, actual_price)
             messagebox.showinfo("Success", "Animal updated")
         else:
-            self.db.add_animal(animal_type, price, seller, shares)
+            self.db.add_animal(animal_type, price, seller, shares, actual_price)
             messagebox.showinfo("Success", "Animal added")
             
         self.refresh_callback()

@@ -9,6 +9,7 @@ from gui.allocate_form import AllocateForm
 from gui.report_window import ReportWindow
 from gui.styles import apply_styles
 from gui.change_password_dialog import ChangePasswordDialog
+from gui.quick_registration_form import QuickRegistrationForm
 from utils.localization import Localization
 from utils.config import ConfigManager
 from datetime import datetime
@@ -241,7 +242,7 @@ class MainWindow:
         ttk.Button(toolbar, text=Localization.t("edit_selected"), command=self.edit_animal).pack(side=tk.LEFT, padx=5)
         ttk.Button(toolbar, text=Localization.t("delete_animal"), command=self.delete_animal, style="Danger.TButton").pack(side=tk.LEFT, padx=5)
 
-        cols = ("ID", Localization.t("type"), Localization.t("price"), Localization.t("seller"), Localization.t("total"), Localization.t("remaining"))
+        cols = ("ID", Localization.t("type"), Localization.t("price"), "Buy Price", Localization.t("seller"), Localization.t("total"), Localization.t("remaining"))
         self.animal_tree = ttk.Treeview(parent, columns=cols, show="headings")
         for col in cols:
             self.animal_tree.heading(col, text=col)
@@ -252,7 +253,11 @@ class MainWindow:
         for row in self.animal_tree.get_children():
             self.animal_tree.delete(row)
         for a in self.db.get_animals():
-            self.animal_tree.insert("", tk.END, values=(a[0], a[1], f"{a[2]:,.0f}", a[3], a[4], a[5]))
+            # a = (id, type, price, actual_buy_price, seller, total, rem, date)
+            # Display prices formatted
+            price = f"{a[2]:,.0f}"
+            actual = f"{a[3]:,.0f}" if a[3] else "-"
+            self.animal_tree.insert("", tk.END, values=(a[0], a[1], price, actual, a[4], a[5], a[6]))
 
     def add_animal(self):
         AnimalForm(self.root, self.db, self.load_animals)
