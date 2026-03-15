@@ -166,7 +166,6 @@ TRANSLATIONS = {
         "total_amount": "کل رقم",
         "receipt_footer": "یہ رسید کمپیوٹر سے تیار کی گئی ہے اور دستی دستخط کی ضرورت نہیں۔"
     }
-    }
 }
 
 class Localization:
