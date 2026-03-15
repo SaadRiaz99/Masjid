@@ -19,7 +19,7 @@ class Database:
         # Participants table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS participants (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                participant_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 phone TEXT,
                 address TEXT,
@@ -34,7 +34,7 @@ class Database:
         # Animals table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS animals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                animal_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 animal_type TEXT NOT NULL,  -- cow, goat, camel
                 purchase_price REAL NOT NULL,
                 actual_buy_price REAL DEFAULT 0.0,
@@ -48,48 +48,48 @@ class Database:
         # Shares allocation
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS shares (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                share_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 participant_id INTEGER,
                 animal_id INTEGER,
                 share_number INTEGER,
                 allocated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (participant_id) REFERENCES participants (id),
-                FOREIGN KEY (animal_id) REFERENCES animals (id)
+                FOREIGN KEY (participant_id) REFERENCES participants (participant_id),
+                FOREIGN KEY (animal_id) REFERENCES animals (animal_id)
             )
         ''')
 
         # Payments table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS payments (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                payment_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 participant_id INTEGER,
                 amount REAL NOT NULL,
                 payment_date TEXT DEFAULT CURRENT_TIMESTAMP,
                 status TEXT DEFAULT 'completed',
-                FOREIGN KEY (participant_id) REFERENCES participants (id)
+                FOREIGN KEY (participant_id) REFERENCES participants (participant_id)
             )
         ''')
 
-        # Receipts table (New)
+        # Receipts table
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS receipts (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                receipt_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 receipt_no TEXT UNIQUE NOT NULL,
                 participant_id INTEGER,
                 amount REAL NOT NULL,
                 date TEXT DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (participant_id) REFERENCES participants (id)
+                FOREIGN KEY (participant_id) REFERENCES participants (participant_id)
             )
         ''')
 
         # Meat distribution
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS distributions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                dist_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 participant_id INTEGER,
                 delivered BOOLEAN DEFAULT FALSE,
                 delivered_at TEXT,
-                FOREIGN KEY (participant_id) REFERENCES participants (id)
+                FOREIGN KEY (participant_id) REFERENCES participants (participant_id)
             )
         ''')
 
@@ -158,7 +158,7 @@ class Database:
     def get_participant(self, participant_id):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM participants WHERE id = ?", (participant_id,))
+        cursor.execute("SELECT * FROM participants WHERE participant_id = ?", (participant_id,))
         row = cursor.fetchone()
         conn.close()
         return row
@@ -169,7 +169,7 @@ class Database:
         cursor.execute('''
             UPDATE participants
             SET name = ?, phone = ?, address = ?, cnic = ?
-            WHERE id = ?
+            WHERE participant_id = ?
         ''', (name, phone, address, cnic, participant_id))
         conn.commit()
         conn.close()
@@ -177,10 +177,18 @@ class Database:
     def delete_participant(self, participant_id):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM participants WHERE id = ?", (participant_id,))
+        # Check if they have payments or shares
+        cursor.execute("SELECT COUNT(*) FROM shares WHERE participant_id = ?", (participant_id,))
+        if cursor.fetchone()[0] > 0:
+            conn.close()
+            return False, "Cannot delete participant with allocated shares."
+            
+        cursor.execute("DELETE FROM participants WHERE participant_id = ?", (participant_id,))
         cursor.execute("DELETE FROM distributions WHERE participant_id = ?", (participant_id,))
+        cursor.execute("DELETE FROM payments WHERE participant_id = ?", (participant_id,))
         conn.commit()
         conn.close()
+        return True, "Deleted successfully"
 
     # Animal methods
     def add_animal(self, animal_type, purchase_price, seller_details, total_shares, actual_buy_price=0.0):
@@ -206,7 +214,7 @@ class Database:
     def get_animal(self, animal_id):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM animals WHERE id = ?", (animal_id,))
+        cursor.execute("SELECT * FROM animals WHERE animal_id = ?", (animal_id,))
         row = cursor.fetchone()
         conn.close()
         return row
@@ -214,12 +222,10 @@ class Database:
     def update_animal(self, animal_id, animal_type, price, seller, total_shares, actual_buy_price=0.0):
         conn = self.get_connection()
         cursor = conn.cursor()
-        # Note: updating total shares might be tricky if some are allocated.
-        # For simplicity, we update basic info.
         cursor.execute('''
             UPDATE animals
             SET animal_type = ?, purchase_price = ?, seller_details = ?, total_shares = ?, actual_buy_price = ?
-            WHERE id = ?
+            WHERE animal_id = ?
         ''', (animal_type, price, seller, total_shares, actual_buy_price, animal_id))
         conn.commit()
         conn.close()
@@ -232,7 +238,7 @@ class Database:
         if cursor.fetchone()[0] > 0:
             conn.close()
             return False # Cannot delete
-        cursor.execute("DELETE FROM animals WHERE id = ?", (animal_id,))
+        cursor.execute("DELETE FROM animals WHERE animal_id = ?", (animal_id,))
         conn.commit()
         conn.close()
         return True
@@ -243,7 +249,7 @@ class Database:
         cursor = conn.cursor()
         
         # Get animal details
-        cursor.execute("SELECT remaining_shares, purchase_price, total_shares, actual_buy_price FROM animals WHERE id = ?", (animal_id,))
+        cursor.execute("SELECT remaining_shares, purchase_price, total_shares, actual_buy_price FROM animals WHERE animal_id = ?", (animal_id,))
         animal_data = cursor.fetchone()
         if not animal_data or animal_data[0] <= 0:
             conn.close()
@@ -263,10 +269,10 @@ class Database:
             ''', (participant_id, animal_id, total_shares - remaining + 1))
             
             # Update animal
-            cursor.execute("UPDATE animals SET remaining_shares = remaining_shares - 1 WHERE id = ?", (animal_id,))
+            cursor.execute("UPDATE animals SET remaining_shares = remaining_shares - 1 WHERE animal_id = ?", (animal_id,))
             
             # Update participant
-            cursor.execute("UPDATE participants SET shares_purchased = shares_purchased + 1, total_cost = total_cost + ? WHERE id = ?", (share_cost, participant_id))
+            cursor.execute("UPDATE participants SET shares_purchased = shares_purchased + 1, total_cost = total_cost + ? WHERE participant_id = ?", (share_cost, participant_id))
             
             conn.commit()
             return True, "Share allocated successfully"
@@ -285,7 +291,7 @@ class Database:
         ''', (participant_id, amount))
         
         # Update participant paid amount
-        cursor.execute("UPDATE participants SET paid_amount = paid_amount + ? WHERE id = ?", (amount, participant_id))
+        cursor.execute("UPDATE participants SET paid_amount = paid_amount + ? WHERE participant_id = ?", (amount, participant_id))
         
         conn.commit()
         conn.close()
@@ -315,7 +321,7 @@ class Database:
         cursor.execute('''
             SELECT r.receipt_no, p.name, r.amount, r.date 
             FROM receipts r
-            JOIN participants p ON r.participant_id = p.id
+            JOIN participants p ON r.participant_id = p.participant_id
             WHERE r.receipt_no = ?
         ''', (receipt_no,))
         row = cursor.fetchone()
@@ -327,9 +333,9 @@ class Database:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT p.id, p.name, p.phone, d.delivered, d.delivered_at
+            SELECT p.participant_id, p.name, p.phone, d.delivered, d.delivered_at
             FROM participants p
-            LEFT JOIN distributions d ON p.id = d.participant_id
+            LEFT JOIN distributions d ON p.participant_id = d.participant_id
         ''')
         rows = cursor.fetchall()
         conn.close()
@@ -345,8 +351,8 @@ class Database:
             cursor.execute("UPDATE distributions SET delivered = FALSE, delivered_at = NULL WHERE participant_id = ?", (participant_id,))
         else: # Mark delivered
              cursor.execute('''
-                INSERT OR REPLACE INTO distributions (id, participant_id, delivered, delivered_at)
-                VALUES ((SELECT id FROM distributions WHERE participant_id = ?), ?, TRUE, ?)
+                INSERT OR REPLACE INTO distributions (dist_id, participant_id, delivered, delivered_at)
+                VALUES ((SELECT dist_id FROM distributions WHERE participant_id = ?), ?, TRUE, ?)
             ''', (participant_id, participant_id, datetime.now().isoformat()))
         
         conn.commit()

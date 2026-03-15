@@ -14,15 +14,15 @@ def populate_sample_data():
     db.add_animal("camel", 100000, "Desert Trader", 10)
 
     # Allocate some shares
-    db.allocate_share(1, 1, 1)  # Ahmed to cow share 1
-    db.allocate_share(1, 1, 2)  # Ahmed to cow share 2
-    db.allocate_share(2, 2, 1)  # Fatima to goat share 1
-    db.allocate_share(3, 3, 1)  # Usman to camel share 1
+    db.allocate_share(1, 1)  # Ahmed to cow share 1
+    db.allocate_share(1, 1)  # Ahmed to cow share 2
+    db.allocate_share(2, 2)  # Fatima to goat share 1
+    db.allocate_share(3, 3)  # Usman to camel share 1
 
     # Record payments
-    db.add_payment(1, 5000, "completed")
-    db.add_payment(2, 1500, "completed")
-    db.add_payment(3, 2500, "pending")
+    db.add_payment(1, 5000)
+    db.add_payment(2, 1500)
+    db.add_payment(3, 2500)
 
     print("Sample data populated successfully!")
 

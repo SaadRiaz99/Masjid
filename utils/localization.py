@@ -157,7 +157,15 @@ TRANSLATIONS = {
         "allocation_payment": "حصص اور ادائیگی",
         "select_animal": "جانور منتخب کریں",
         "amount_paid": "ادا شدہ رقم",
-        "register_print": "رجسٹر کریں اور رسید بنائیں"
+        "register_print": "رجسٹر اور رسید بنائیں",
+        "received_from": "وصول کنندہ:",
+        "phone_label": "فون:",
+        "cnic_label": "شناختی کارڈ:",
+        "description": "تفصیل",
+        "amount_pkr": "رقم (روپے)",
+        "total_amount": "کل رقم",
+        "receipt_footer": "یہ رسید کمپیوٹر سے تیار کی گئی ہے اور دستی دستخط کی ضرورت نہیں۔"
+    }
     }
 }
 

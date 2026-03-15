@@ -121,13 +121,19 @@ class QuickRegistrationForm:
         p = self.db.get_participant(participant_id)
         # p = (id, name, phone, address, cnic, shares, total_cost, paid, created)
         
+        # Get animal type for receipt
+        animal = self.db.get_animal(animal_id)
+        animal_type = animal[1] if animal else "Unknown"
+        
         receipt_data = {
             'mosque_name': ConfigManager.get("mosque_name", "Ijtimai Qurbani Center"),
             'receipt_number': receipt_no,
             'participant_name': name,
-            'phone': phone,
-            'shares': p[5], # Updated shares
-            'amount_paid': amount_paid,
+            'phone': str(phone),
+            'cnic': cnic,
+            'animal_type': animal_type,
+            'shares': str(p[5]),
+            'amount_paid': str(amount_paid),
             'date': datetime.now().strftime('%Y-%m-%d %H:%M')
         }
         

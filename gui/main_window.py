@@ -217,9 +217,11 @@ class MainWindow:
                 'mosque_name': ConfigManager.get("mosque_name", "Ijtimai Qurbani Center"),
                 'receipt_number': receipt_no,
                 'participant_name': name,
-                'phone': phone,
-                'shares': shares,
-                'amount_paid': paid,
+                'phone': str(phone),
+                'cnic': str(cnic),
+                'animal_type': 'Qurbani Share',
+                'shares': str(shares),
+                'amount_paid': str(paid),
                 'date': datetime.now().strftime('%Y-%m-%d %H:%M')
             }
             
@@ -459,3 +461,61 @@ class MainWindow:
             self.db.restore_database(backup_path)
             self.load_dashboard_stats()
             messagebox.showinfo(Localization.t("success"), "Database restored")
+
+    # --- Settings ---
+    def setup_settings_tab(self, parent):
+        frame = ttk.Frame(parent, padding=20)
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        # Language Selection
+        ttk.Label(frame, text=Localization.t("language")).grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.lang_var = tk.StringVar(value=ConfigManager.get("language", "en"))
+        lang_combo = ttk.Combobox(frame, textvariable=self.lang_var, values=["en", "ur"], state="readonly")
+        lang_combo.grid(row=0, column=1, sticky=tk.W, pady=5)
+        lang_combo.bind("<<ComboboxSelected>>", self.change_language)
+
+        # Mosque Name
+        ttk.Label(frame, text=Localization.t("mosque_name")).grid(row=1, column=0, sticky=tk.W, pady=5)
+        self.mosque_entry = ttk.Entry(frame)
+        self.mosque_entry.insert(0, ConfigManager.get("mosque_name", "Ijtimai Qurbani Center"))
+        self.mosque_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
+
+        # Receipt Background
+        ttk.Label(frame, text=Localization.t("receipt_bg")).grid(row=2, column=0, sticky=tk.W, pady=5)
+        bg_frame = ttk.Frame(frame)
+        bg_frame.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5)
+        self.bg_path_var = tk.StringVar(value=ConfigManager.get("receipt_bg_path", ""))
+        ttk.Entry(bg_frame, textvariable=self.bg_path_var, state="readonly").pack(side=tk.LEFT, fill=tk.X, expand=True)
+        ttk.Button(bg_frame, text=Localization.t("set_bg"), command=self.set_receipt_bg).pack(side=tk.LEFT, padx=5)
+        ttk.Button(bg_frame, text=Localization.t("remove_bg"), command=self.remove_receipt_bg).pack(side=tk.LEFT)
+
+        # Password Change
+        ttk.Button(frame, text=Localization.t("change_password"), command=self.change_password).grid(row=3, column=0, columnspan=2, pady=20)
+
+        # Save Button
+        ttk.Button(frame, text=Localization.t("save"), command=self.save_settings).grid(row=4, column=0, columnspan=2)
+
+    def change_language(self, event):
+        lang = self.lang_var.get()
+        ConfigManager.set("language", lang)
+        messagebox.showinfo(Localization.t("restart_required"), Localization.t("restart_required"))
+
+    def set_receipt_bg(self):
+        bg_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+        if bg_path:
+            self.bg_path_var.set(bg_path)
+            ConfigManager.set("receipt_bg_path", bg_path)
+            messagebox.showinfo(Localization.t("success"), "Background image set.")
+
+    def remove_receipt_bg(self):
+        self.bg_path_var.set("")
+        ConfigManager.set("receipt_bg_path", "")
+        messagebox.showinfo(Localization.t("success"), "Background image removed.")
+
+    def change_password(self):
+        ChangePasswordDialog(self.root, self.db)
+
+    def save_settings(self):
+        mosque_name = self.mosque_entry.get()
+        ConfigManager.set("mosque_name", mosque_name)
+        messagebox.showinfo(Localization.t("success"), "Settings saved.")
