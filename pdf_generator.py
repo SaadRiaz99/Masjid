@@ -1,6 +1,6 @@
 from fpdf import FPDF
 import os
-from utils.config import ConfigManager
+from utils.config import ConfigManager, DATA_DIR
 from utils.localization import Localization
 
 class ReceiptGenerator:
@@ -57,14 +57,8 @@ class ReceiptGenerator:
         pdf.add_page()
         pdf.set_auto_page_break(auto=True, margin=15)
         
-        # Try to set font for Unicode
-        try:
-            if lang == "ur":
-                pdf.set_font("Arial Unicode MS", size=12)
-            else:
-                pdf.set_font("Arial", size=12)
-        except:
-            pdf.set_font("Arial", size=12)  # Fallback
+        # Set font - use Arial for both languages as FPDF has limited Unicode support
+        pdf.set_font("Arial", size=12)
         
         # Background Image (Watermark)
         bg_path = ConfigManager.get("receipt_bg_path")
@@ -88,7 +82,6 @@ class ReceiptGenerator:
         
         # Title
         pdf.set_font("Arial", 'B', 14)
-        # Check if we should use fill (might cover bg) - let's keep it transparent or minimal
         pdf.set_fill_color(220, 220, 220) 
         pdf.cell(0, 10, txt=labels["receipt"], ln=True, align='C', fill=True)
         pdf.ln(5)
@@ -115,7 +108,7 @@ class ReceiptGenerator:
         pdf.set_font("Arial", size=11)
         pdf.cell(0, 8, txt=data['phone'], ln=True)
         
-        if 'cnic' in data:
+        if 'cnic' in data and data['cnic']:
             pdf.set_font("Arial", 'B', 11)
             pdf.cell(40, 8, txt=labels["cnic"], border=0)
             pdf.set_font("Arial", size=11)
@@ -132,12 +125,12 @@ class ReceiptGenerator:
         pdf.set_font("Arial", size=11)
         animal_desc = f"Qurbani Shares - {data.get('animal_type', 'Animal')} ({data['shares']})"
         pdf.cell(80, 8, txt=animal_desc, border=1)
-        pdf.cell(50, 8, txt=f"{data['amount_paid']:,.2f}", border=1, align='R', ln=True)
+        pdf.cell(50, 8, txt=f"{float(data['amount_paid']):,.2f}", border=1, align='R', ln=True)
         
         # Total
         pdf.set_font("Arial", 'B', 12)
         pdf.cell(80, 10, txt=labels["total"], border=1, align='R')
-        pdf.cell(50, 10, txt=f"{data['amount_paid']:,.2f}", border=1, align='R', ln=True)
+        pdf.cell(50, 10, txt=f"{float(data['amount_paid']):,.2f}", border=1, align='R', ln=True)
         
         pdf.ln(15)
 
@@ -172,5 +165,9 @@ class ReceiptGenerator:
         if os.name == 'nt':
             os.startfile(output_path, "print")
         else:
-            # Linux/Mac placeholder
-            pass
+            # For Linux/Mac, try to open with default PDF viewer
+            import subprocess
+            try:
+                subprocess.run(['xdg-open', output_path])
+            except:
+                pass

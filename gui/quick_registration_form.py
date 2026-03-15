@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 from datetime import datetime
 import os
 from utils.localization import Localization
-from utils.config import ConfigManager
+from utils.config import ConfigManager, DATA_DIR
 
 class QuickRegistrationForm:
     def __init__(self, parent, db, pdf_gen, refresh_callback):
@@ -137,10 +137,10 @@ class QuickRegistrationForm:
             'date': datetime.now().strftime('%Y-%m-%d %H:%M')
         }
         
-        if not os.path.exists("receipts"):
-            os.makedirs("receipts")
+        if not os.path.exists(os.path.join(DATA_DIR, "receipts")):
+            os.makedirs(os.path.join(DATA_DIR, "receipts"))
             
-        output_path = f"receipts/Receipt_{receipt_no}.pdf"
+        output_path = os.path.join(DATA_DIR, "receipts", f"Receipt_{receipt_no}.pdf")
         self.pdf_gen.generate_receipt(receipt_data, output_path)
         
         # 6. Print & Cleanup

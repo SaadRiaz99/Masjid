@@ -8,10 +8,9 @@ from gui.payment_form import PaymentForm
 from gui.allocate_form import AllocateForm
 from gui.report_window import ReportWindow
 from gui.styles import apply_styles
-from gui.change_password_dialog import ChangePasswordDialog
 from gui.quick_registration_form import QuickRegistrationForm
 from utils.localization import Localization
-from utils.config import ConfigManager
+from utils.config import ConfigManager, DATA_DIR
 from datetime import datetime
 import os
 
@@ -115,7 +114,13 @@ class MainWindow:
         self.create_stat_card(stats_frame, Localization.t("pending_shares"), "0", 4)
 
         # Refresh Button
-        ttk.Button(parent, text=Localization.t("refresh_dashboard"), command=self.load_dashboard_stats).pack(pady=20)
+        ttk.Button(parent, text=Localization.t("refresh_dashboard"), command=self.load_dashboard_stats).pack(pady=10)
+
+        # Quick Registration Button
+        ttk.Button(parent, text=Localization.t("quick_register"), command=self.open_quick_registration, style="TButton").pack(pady=10, fill=tk.X)
+
+    def open_quick_registration(self):
+        QuickRegistrationForm(self.root, self.db, self.pdf_gen, self.load_dashboard_stats)
 
     def create_stat_card(self, parent, title, value, col):
         card = ttk.Frame(parent, style="Card.TFrame", padding=15)
@@ -204,6 +209,7 @@ class MainWindow:
             pid = item[0]
             name = item[1]
             phone = item[2]
+            cnic = item[3]
             shares = item[4]
             paid = float(str(item[6]).replace(',', ''))
             
@@ -225,10 +231,10 @@ class MainWindow:
                 'date': datetime.now().strftime('%Y-%m-%d %H:%M')
             }
             
-            if not os.path.exists("receipts"):
-                os.makedirs("receipts")
+            if not os.path.exists(os.path.join(DATA_DIR, "receipts")):
+                os.makedirs(os.path.join(DATA_DIR, "receipts"))
                 
-            output_path = f"receipts/Receipt_{receipt_no}.pdf"
+            output_path = os.path.join(DATA_DIR, "receipts", f"Receipt_{receipt_no}.pdf")
             self.pdf_gen.generate_receipt(receipt_data, output_path)
             
             if messagebox.askyesno(Localization.t("success"), f"Receipt generated: {output_path}\nDo you want to print it now?"):
@@ -398,57 +404,6 @@ class MainWindow:
         except Exception as e:
             messagebox.showerror(Localization.t("error"), str(e))
 
-    # --- Settings ---
-    def setup_settings_tab(self, parent):
-        frame = ttk.Frame(parent, padding=20)
-        frame.pack(fill=tk.BOTH, expand=True)
-
-        # Language
-        ttk.Label(frame, text=Localization.t("language"), style="SubHeader.TLabel").pack(anchor=tk.W, pady=(0, 5))
-        self.lang_var = tk.StringVar(value=Localization.get_language())
-        lang_frame = ttk.Frame(frame)
-        lang_frame.pack(anchor=tk.W, pady=(0, 20))
-        
-        ttk.Radiobutton(lang_frame, text=Localization.t("english"), variable=self.lang_var, value="en", command=self.save_language).pack(side=tk.LEFT, padx=10)
-        ttk.Radiobutton(lang_frame, text=Localization.t("urdu"), variable=self.lang_var, value="ur", command=self.save_language).pack(side=tk.LEFT, padx=10)
-
-        # Receipt Background
-        ttk.Label(frame, text=Localization.t("receipt_bg"), style="SubHeader.TLabel").pack(anchor=tk.W, pady=(0, 5))
-        
-        bg_frame = ttk.Frame(frame)
-        bg_frame.pack(anchor=tk.W, pady=(0, 10))
-        
-        self.bg_label = ttk.Label(bg_frame, text=ConfigManager.get("receipt_bg_path") or "No Image Selected")
-        self.bg_label.pack(side=tk.LEFT, padx=(0, 10))
-        
-        ttk.Button(bg_frame, text=Localization.t("set_bg"), command=self.set_receipt_bg).pack(side=tk.LEFT, padx=5)
-        ttk.Button(bg_frame, text=Localization.t("remove_bg"), command=self.remove_receipt_bg).pack(side=tk.LEFT, padx=5)
-
-        # Password
-        ttk.Label(frame, text=Localization.t("change_password"), style="SubHeader.TLabel").pack(anchor=tk.W, pady=(20, 5))
-        ttk.Button(frame, text=Localization.t("change_password"), command=self.open_change_password).pack(anchor=tk.W)
-
-    def open_change_password(self):
-        ChangePasswordDialog(self.root, self.db)
-
-    def save_language(self):
-        new_lang = self.lang_var.get()
-        if new_lang != Localization.get_language():
-            Localization.set_language(new_lang)
-            messagebox.showinfo(Localization.t("language"), Localization.t("restart_required"))
-
-    def set_receipt_bg(self):
-        path = filedialog.askopenfilename(filetypes=[("Images", "*.png;*.jpg;*.jpeg")])
-        if path:
-            ConfigManager.set("receipt_bg_path", path)
-            self.bg_label.config(text=path)
-            messagebox.showinfo(Localization.t("success"), "Background image saved.")
-
-    def remove_receipt_bg(self):
-        ConfigManager.set("receipt_bg_path", None)
-        self.bg_label.config(text="No Image Selected")
-        messagebox.showinfo(Localization.t("success"), "Background image removed.")
-
     def backup_db(self):
         backup_path = filedialog.asksaveasfilename(defaultextension=".db", filetypes=[("Database files", "*.db")])
         if backup_path:
@@ -499,6 +454,11 @@ class MainWindow:
         lang = self.lang_var.get()
         ConfigManager.set("language", lang)
         messagebox.showinfo(Localization.t("restart_required"), Localization.t("restart_required"))
+        # Restart the application
+        self.root.destroy()
+        import sys
+        import subprocess
+        subprocess.Popen([sys.executable] + sys.argv)
 
     def set_receipt_bg(self):
         bg_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])

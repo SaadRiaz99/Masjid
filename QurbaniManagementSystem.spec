@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('qurbani.db', '.'), ('config.json', '.')],
     hiddenimports=['fpdf', 'openpyxl', 'utils.config', 'utils.localization', 'gui.change_password_dialog', 'qrcode', 'PIL.Image'],
     hookspath=[],
     hooksconfig={},
@@ -35,4 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    onefile=True,
 )

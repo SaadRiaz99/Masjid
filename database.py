@@ -1,10 +1,17 @@
 import sqlite3
 import os
+import sys
+import shutil
 from datetime import datetime
+from utils.config import DATA_DIR
 
 class Database:
     def __init__(self, db_path='qurbani.db'):
-        self.db_path = db_path
+        self.db_path = os.path.join(DATA_DIR, db_path)
+        if getattr(sys, 'frozen', False) and not os.path.exists(self.db_path):
+            bundle_db = os.path.join(sys._MEIPASS, db_path)
+            if os.path.exists(bundle_db):
+                shutil.copy(bundle_db, self.db_path)
         self.create_tables()
 
     def get_connection(self):
