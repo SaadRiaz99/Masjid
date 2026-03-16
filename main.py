@@ -1,10 +1,14 @@
 import tkinter as tk
 from gui.login_window import LoginWindow
 from gui.main_window import MainWindow
+from gui.styles import apply_styles
 
 def main():
     root = tk.Tk()
     root.title("Qurbani Management System")
+    
+    # Apply global styles
+    apply_styles(root)
 
     def on_login_success():
         # Hide the login window or clear the root

@@ -123,7 +123,8 @@ class ReceiptGenerator:
         pdf.cell(50, 8, txt=labels["amount_pkr"], border=1, fill=True, align='R', ln=True)
         
         pdf.set_font("Arial", size=11)
-        animal_desc = f"Qurbani Shares - {data.get('animal_type', 'Animal')} ({data['shares']})"
+        category = data.get('category', 'Qurbani')
+        animal_desc = f"{category} Share - {data.get('animal_type', 'Animal')} ({data['shares']})"
         pdf.cell(80, 8, txt=animal_desc, border=1)
         pdf.cell(50, 8, txt=f"{float(data['amount_paid']):,.2f}", border=1, align='R', ln=True)
         
@@ -132,6 +133,14 @@ class ReceiptGenerator:
         pdf.cell(80, 10, txt=labels["total"], border=1, align='R')
         pdf.cell(50, 10, txt=f"{float(data['amount_paid']):,.2f}", border=1, align='R', ln=True)
         
+        pdf.ln(10)
+        
+        if category == 'Waqf':
+            pdf.set_font("Arial", 'B', 10)
+            pdf.set_text_color(200, 0, 0)
+            pdf.cell(0, 5, "Note: This share is donated as WAQF.", ln=True, align='C')
+            pdf.set_text_color(0, 0, 0)
+
         pdf.ln(15)
 
         # QR Code (Optional)
@@ -155,9 +164,11 @@ class ReceiptGenerator:
         pdf.cell(10, 5, "", ln=0)
         pdf.cell(60, 5, "Stamp", ln=1, align='C')
         
-        pdf.ln(5)
-        pdf.set_font("Arial", 'I', 8)
-        pdf.cell(0, 5, txt=labels["footer"], ln=True, align='C')
+        # Software Branding Footer
+        pdf.set_y(-15)
+        pdf.set_font("Arial", 'B', 9)
+        pdf.set_text_color(100, 100, 100)
+        pdf.cell(0, 10, "Software By Saad Bin Riaz 0314 1088892", ln=True, align='C')
 
         pdf.output(output_path)
 

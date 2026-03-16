@@ -53,13 +53,27 @@ class QuickRegistrationForm:
         self.address_entry.pack(fill=tk.X, pady=(0, 10))
 
         # --- Right Column: Allocation & Payment ---
+        # Shares
+        ttk.Label(right_col, text="Number of Shares (Hisse)").pack(anchor=tk.W)
+        self.shares_var = tk.StringVar(value="1")
+        self.shares_entry = ttk.Entry(right_col, textvariable=self.shares_var)
+        self.shares_entry.pack(fill=tk.X, pady=(0, 10))
+        self.shares_var.trace("w", self.on_shares_change)
+
         # Animal Selection
-        ttk.Label(right_col, text=Localization.t("select_animal")).pack(anchor=tk.W)
+        self.animal_label = ttk.Label(right_col, text=Localization.t("select_animal"))
+        self.animal_label.pack(anchor=tk.W)
         self.animal_var = tk.StringVar()
         self.animal_combo = ttk.Combobox(right_col, textvariable=self.animal_var, state="readonly")
         self.animal_combo.pack(fill=tk.X, pady=(0, 10))
         self.update_animal_list()
         
+        # Category (Waqf/Qurbani)
+        ttk.Label(right_col, text="Category (Qurbani/Waqf)").pack(anchor=tk.W)
+        self.category_var = tk.StringVar(value="Qurbani")
+        self.category_combo = ttk.Combobox(right_col, textvariable=self.category_var, values=["Qurbani", "Waqf"], state="readonly")
+        self.category_combo.pack(fill=tk.X, pady=(0, 10))
+
         # Payment
         ttk.Label(right_col, text=Localization.t("amount_paid")).pack(anchor=tk.W)
         self.amount_entry = ttk.Entry(right_col)
@@ -69,13 +83,24 @@ class QuickRegistrationForm:
         btn_frame = ttk.Frame(self.frame)
         btn_frame.pack(fill=tk.X, pady=20)
         
-        self.register_btn = ttk.Button(btn_frame, text=Localization.t("register_print"), command=self.process_registration)
+        self.register_btn = ttk.Button(btn_frame, text=Localization.t("register_print"), command=self.process_registration, style="Success.TButton")
         self.register_btn.pack(fill=tk.X, ipady=10)
+
+    def on_shares_change(self, *args):
+        try:
+            shares = int(self.shares_var.get() or 0)
+            if shares == 7:
+                self.animal_label.config(text="Select Animal (Or New Cow will be created)")
+            else:
+                self.animal_label.config(text=Localization.t("select_animal"))
+        except ValueError:
+            pass
 
     def update_animal_list(self):
         animals = self.db.get_animals()
         # Filter only animals with remaining shares
-        available = [f"{a[0]} - {a[1]} (Rem: {a[5]} | Cost: {int(a[2]/a[4])})" for a in animals if a[5] > 0]
+        # a = (id, type, price, actual_price, seller, total, rem, category, status, date)
+        available = [f"{a[0]} - {a[1]} (Rem: {a[6]} | Cost: {int(a[2]/a[5])})" for a in animals if a[6] > 0]
         self.animal_combo['values'] = available
 
     def process_registration(self):
@@ -86,16 +111,39 @@ class QuickRegistrationForm:
         address = self.address_entry.get().strip()
         animal_sel = self.animal_var.get()
         amount_str = self.amount_entry.get().strip()
-
-        if not name or not animal_sel or not amount_str:
-            messagebox.showerror(Localization.t("error"), "Name, Animal, and Amount are required.")
+        try:
+            num_shares = int(self.shares_var.get() or 1)
+        except ValueError:
+            messagebox.showerror("Error", "Invalid number of shares")
             return
+
+        if not name or not amount_str:
+            messagebox.showerror(Localization.t("error"), "Name and Amount are required.")
+            return
+
+        # Special logic for 7 shares
+        animal_id = None
+        if num_shares == 7 and not animal_sel:
+            if messagebox.askyesno("Animal Distribution", "7 shares completed. Would you like to automatically create a new Cow for this user?"):
+                # Automatically create a cow
+                # Default values for automatic cow creation
+                animal_id = self.db.add_animal("cow", 210000, "Auto-Created", 7)
+            else:
+                if not animal_sel:
+                    messagebox.showerror(Localization.t("error"), "Please select an animal or confirm auto-creation.")
+                    return
+
+        if not animal_id:
+            try:
+                animal_id = int(animal_sel.split(' - ')[0])
+            except (ValueError, IndexError):
+                messagebox.showerror(Localization.t("error"), "Invalid Animal selection.")
+                return
 
         try:
             amount_paid = float(amount_str)
-            animal_id = int(animal_sel.split(' - ')[0])
         except ValueError:
-            messagebox.showerror(Localization.t("error"), "Invalid Amount or Animal selection.")
+            messagebox.showerror(Localization.t("error"), "Invalid Amount.")
             return
 
         # 2. Add Participant
@@ -104,10 +152,9 @@ class QuickRegistrationForm:
             messagebox.showerror(Localization.t("error"), "Failed to add participant (CNIC might be duplicate).")
             return
 
-        # 3. Allocate Share
-        success, msg = self.db.allocate_share(participant_id, animal_id)
+        # 3. Allocate Shares
+        success, msg = self.db.allocate_shares(participant_id, animal_id, num_shares)
         if not success:
-            # Rollback participant? Ideally yes, but for now we just warn.
             messagebox.showerror(Localization.t("error"), f"Allocation failed: {msg}")
             return
 
@@ -119,7 +166,6 @@ class QuickRegistrationForm:
         
         # Get latest participant data for receipt
         p = self.db.get_participant(participant_id)
-        # p = (id, name, phone, address, cnic, shares, total_cost, paid, created)
         
         # Get animal type for receipt
         animal = self.db.get_animal(animal_id)
@@ -132,7 +178,8 @@ class QuickRegistrationForm:
             'phone': str(phone),
             'cnic': cnic,
             'animal_type': animal_type,
-            'shares': str(p[5]),
+            'category': self.category_var.get(),
+            'shares': str(num_shares),
             'amount_paid': str(amount_paid),
             'date': datetime.now().strftime('%Y-%m-%d %H:%M')
         }
@@ -157,6 +204,7 @@ class QuickRegistrationForm:
         self.cnic_entry.delete(0, tk.END)
         self.address_entry.delete(0, tk.END)
         self.amount_entry.delete(0, tk.END)
+        self.shares_var.set("1")
         self.animal_var.set("")
         
         # Refresh Data

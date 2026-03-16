@@ -7,7 +7,7 @@ from gui.animal_form import AnimalForm
 from gui.payment_form import PaymentForm
 from gui.allocate_form import AllocateForm
 from gui.report_window import ReportWindow
-from gui.styles import apply_styles
+from gui.styles import StyleManager
 from gui.quick_registration_form import QuickRegistrationForm
 from utils.localization import Localization
 from utils.config import ConfigManager, DATA_DIR
@@ -19,9 +19,10 @@ class MainWindow:
         self.root = root
         self.db = Database()
         self.pdf_gen = ReceiptGenerator()
+        self.dark_mode = ConfigManager.get("dark_mode", False)
         
         # Apply Styles
-        self.style = apply_styles(self.root)
+        self.style = StyleManager.apply_styles(self.root, self.dark_mode)
         
         self.create_widgets()
         self.load_dashboard_stats()
@@ -31,17 +32,28 @@ class MainWindow:
         self.root.geometry("1000x700")
 
         # Main Container
-        main_frame = ttk.Frame(self.root)
-        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.main_frame = ttk.Frame(self.root)
+        self.main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         # Header
-        header_frame = ttk.Frame(main_frame)
+        header_frame = ttk.Frame(self.main_frame)
         header_frame.pack(fill=tk.X, pady=(0, 10))
         ttk.Label(header_frame, text=Localization.t("title"), style="Header.TLabel").pack(side=tk.LEFT)
+        
+        # Theme Toggle
+        theme_btn_text = "Light Mode" if self.dark_mode else "Dark Mode"
+        self.theme_btn = ttk.Button(header_frame, text=theme_btn_text, command=self.toggle_theme)
+        self.theme_btn.pack(side=tk.RIGHT, padx=5)
+
         ttk.Button(header_frame, text=Localization.t("backup_db"), command=self.backup_db).pack(side=tk.RIGHT)
 
+        # Footer
+        footer_frame = ttk.Frame(self.main_frame)
+        footer_frame.pack(fill=tk.X, side=tk.BOTTOM, pady=(10, 0))
+        ttk.Label(footer_frame, text="Software By Saad Bin Riaz 0314 1088892", style="Footer.TLabel").pack(side=tk.RIGHT)
+
         # Tabs
-        self.notebook = ttk.Notebook(main_frame)
+        self.notebook = ttk.Notebook(self.main_frame)
         self.notebook.pack(fill=tk.BOTH, expand=True)
 
         # 1. Dashboard Tab
@@ -87,9 +99,16 @@ class MainWindow:
         # Refresh data on tab change
         self.notebook.bind("<<NotebookTabChanged>>", self.on_tab_change)
 
+    def toggle_theme(self):
+        self.dark_mode = not self.dark_mode
+        ConfigManager.set("dark_mode", self.dark_mode)
+        from gui.styles import StyleManager
+        StyleManager.apply_styles(self.root, self.dark_mode)
+        theme_btn_text = "Light Mode" if self.dark_mode else "Dark Mode"
+        self.theme_btn.config(text=theme_btn_text)
+        messagebox.showinfo("Theme Changed", "Theme applied successfully. Some elements may require restart for full effect.")
+
     def on_tab_change(self, event):
-        # We can't rely on tab name if it's localized, so we check index or just reload based on visible content?
-        # Better: just use index or check which tab object is selected.
         selected_tab = self.notebook.select()
         
         if selected_tab == str(self.dashboard_tab):
@@ -126,11 +145,6 @@ class MainWindow:
         card = ttk.Frame(parent, style="Card.TFrame", padding=15)
         card.grid(row=0, column=col, padx=10, sticky="ew")
         ttk.Label(card, text=title, font=("Segoe UI", 10)).pack()
-        # Mapping title to attribute name is tricky with localization.
-        # We will map by column index logic or just use specific attribute names if needed.
-        # Let's verify load_dashboard_stats updates correct labels.
-        # Since I create them dynamically here, I need a way to reference them.
-        # Simple fix: Store them in a dict or list by index.
         label = ttk.Label(card, text=value, font=("Segoe UI", 14, "bold"), foreground="#4CAF50")
         label.pack()
         
@@ -143,7 +157,7 @@ class MainWindow:
     def load_dashboard_stats(self):
         stats = self.db.get_dashboard_stats()
         self.stat_participants.config(text=str(stats['participants']))
-        self.stat_animals.config(text=str(stats['animals']))
+        self.stat_animals.config(text=f"{stats['qurbani_animals']} Q / {stats['waqf_animals']} W")
         self.stat_shares.config(text=str(stats['shares_sold']))
         self.stat_money.config(text=f"Rs. {stats['collected']:,.0f}")
         self.stat_pending.config(text=str(stats['pending_shares']))
@@ -157,7 +171,7 @@ class MainWindow:
         ttk.Button(toolbar, text=Localization.t("add_participant"), command=self.add_participant).pack(side=tk.LEFT, padx=5)
         ttk.Button(toolbar, text=Localization.t("edit_selected"), command=self.edit_participant).pack(side=tk.LEFT, padx=5)
         ttk.Button(toolbar, text=Localization.t("delete_selected"), command=self.delete_participant, style="Danger.TButton").pack(side=tk.LEFT, padx=5)
-        ttk.Button(toolbar, text=Localization.t("generate_receipt"), command=self.generate_receipt).pack(side=tk.LEFT, padx=5)
+        ttk.Button(toolbar, text=Localization.t("generate_receipt"), command=self.generate_receipt, style="Success.TButton").pack(side=tk.LEFT, padx=5)
         
         # Search
         ttk.Label(toolbar, text=Localization.t("search")).pack(side=tk.LEFT, padx=(20, 5))
@@ -165,13 +179,22 @@ class MainWindow:
         self.search_var.trace("w", lambda *args: self.load_participants())
         ttk.Entry(toolbar, textvariable=self.search_var).pack(side=tk.LEFT, fill=tk.X, expand=True)
 
-        # Treeview
+        # Treeview Container
+        tree_frame = ttk.Frame(parent)
+        tree_frame.pack(fill=tk.BOTH, expand=True)
+
         cols = ("ID", Localization.t("name"), Localization.t("phone"), Localization.t("cnic"), Localization.t("shares"), Localization.t("cost"), Localization.t("paid"), Localization.t("balance"))
-        self.part_tree = ttk.Treeview(parent, columns=cols, show="headings")
+        self.part_tree = ttk.Treeview(tree_frame, columns=cols, show="headings")
         for col in cols:
             self.part_tree.heading(col, text=col)
             self.part_tree.column(col, width=100)
-        self.part_tree.pack(fill=tk.BOTH, expand=True)
+        
+        # Scrollbar
+        scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.part_tree.yview)
+        self.part_tree.configure(yscroll=scrollbar.set)
+        
+        self.part_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
     def load_participants(self):
         query = self.search_var.get()
@@ -246,11 +269,31 @@ class MainWindow:
     def setup_animals_tab(self, parent):
         toolbar = ttk.Frame(parent)
         toolbar.pack(fill=tk.X, pady=5)
-        ttk.Button(toolbar, text=Localization.t("add_animal"), command=self.add_animal).pack(side=tk.LEFT, padx=5)
+        
+        # Filters
+        ttk.Label(toolbar, text="Type:").pack(side=tk.LEFT, padx=5)
+        self.animal_filter_type = ttk.Combobox(toolbar, values=["All", "cow", "goat", "camel"], width=10, state="readonly")
+        self.animal_filter_type.set("All")
+        self.animal_filter_type.pack(side=tk.LEFT, padx=5)
+        self.animal_filter_type.bind("<<ComboboxSelected>>", lambda e: self.load_animals())
+
+        ttk.Label(toolbar, text="Cat:").pack(side=tk.LEFT, padx=5)
+        self.animal_filter_cat = ttk.Combobox(toolbar, values=["All", "Qurbani", "Waqf"], width=10, state="readonly")
+        self.animal_filter_cat.set("All")
+        self.animal_filter_cat.pack(side=tk.LEFT, padx=5)
+        self.animal_filter_cat.bind("<<ComboboxSelected>>", lambda e: self.load_animals())
+
+        ttk.Label(toolbar, text="Status:").pack(side=tk.LEFT, padx=5)
+        self.animal_filter_status = ttk.Combobox(toolbar, values=["All", "Available", "Completed"], width=10, state="readonly")
+        self.animal_filter_status.set("All")
+        self.animal_filter_status.pack(side=tk.LEFT, padx=5)
+        self.animal_filter_status.bind("<<ComboboxSelected>>", lambda e: self.load_animals())
+
+        ttk.Button(toolbar, text=Localization.t("add_animal"), command=self.add_animal).pack(side=tk.LEFT, padx=20)
         ttk.Button(toolbar, text=Localization.t("edit_selected"), command=self.edit_animal).pack(side=tk.LEFT, padx=5)
         ttk.Button(toolbar, text=Localization.t("delete_animal"), command=self.delete_animal, style="Danger.TButton").pack(side=tk.LEFT, padx=5)
 
-        cols = ("ID", Localization.t("type"), Localization.t("price"), "Buy Price", Localization.t("seller"), Localization.t("total"), Localization.t("remaining"))
+        cols = ("ID", Localization.t("type"), Localization.t("price"), "Category", "Status", Localization.t("total"), Localization.t("remaining"))
         self.animal_tree = ttk.Treeview(parent, columns=cols, show="headings")
         for col in cols:
             self.animal_tree.heading(col, text=col)
@@ -260,12 +303,20 @@ class MainWindow:
     def load_animals(self):
         for row in self.animal_tree.get_children():
             self.animal_tree.delete(row)
-        for a in self.db.get_animals():
-            # a = (id, type, price, actual_buy_price, seller, total, rem, date)
-            # Display prices formatted
+            
+        a_type = getattr(self, 'animal_filter_type', None)
+        a_type = a_type.get() if a_type else "All"
+        
+        a_cat = getattr(self, 'animal_filter_cat', None)
+        a_cat = a_cat.get() if a_cat else "All"
+        
+        a_status = getattr(self, 'animal_filter_status', None)
+        a_status = a_status.get() if a_status else "All"
+
+        for a in self.db.get_animals(a_type, a_cat, a_status):
+            # a = (id, type, price, actual_buy_price, seller, total, rem, category, status, date)
             price = f"{a[2]:,.0f}"
-            actual = f"{a[3]:,.0f}" if a[3] else "-"
-            self.animal_tree.insert("", tk.END, values=(a[0], a[1], price, actual, a[4], a[5], a[6]))
+            self.animal_tree.insert("", tk.END, values=(a[0], a[1], price, a[7], a[8], a[5], a[6]))
 
     def add_animal(self):
         AnimalForm(self.root, self.db, self.load_animals)
@@ -378,6 +429,7 @@ class MainWindow:
         frame = ttk.Frame(parent, padding=20)
         frame.pack(fill=tk.BOTH, expand=True)
         ttk.Button(frame, text=Localization.t("export_participants"), command=lambda: self.export_report("participants")).pack(pady=5, fill=tk.X)
+        ttk.Button(frame, text="Export Animals List", command=lambda: self.export_report("animals")).pack(pady=5, fill=tk.X)
         ttk.Button(frame, text=Localization.t("export_finance"), command=lambda: self.export_report("finance")).pack(pady=5, fill=tk.X)
 
     def export_report(self, report_type):
@@ -392,10 +444,14 @@ class MainWindow:
                 ws.append(["ID", "Name", "Phone", "CNIC", "Shares", "Total Cost", "Paid", "Balance"])
                 for p in self.db.get_participants():
                      ws.append([p[0], p[1], p[2], p[4], p[5], p[6], p[7], p[6]-p[7]])
+            elif report_type == "animals":
+                ws.append(["ID", "Type", "Price", "Actual Price", "Seller", "Total Shares", "Rem Shares", "Category", "Status"])
+                for a in self.db.get_animals():
+                    ws.append([a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]])
             elif report_type == "finance":
                 ws.append(["Receipt No", "Participant", "Amount", "Date"])
                 conn = self.db.get_connection()
-                rows = conn.execute("SELECT r.receipt_no, p.name, r.amount, r.date FROM receipts r JOIN participants p ON r.participant_id = p.id").fetchall()
+                rows = conn.execute("SELECT r.receipt_no, p.name, r.amount, r.date FROM receipts r JOIN participants p ON r.participant_id = p.participant_id").fetchall()
                 conn.close()
                 for r in rows: ws.append(list(r))
             

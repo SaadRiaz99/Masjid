@@ -9,30 +9,36 @@ class ParticipantForm:
         self.refresh_callback = refresh_callback
         self.participant_id = participant_id
         self.top = tk.Toplevel(parent)
-        self.top.title("Add/Edit Participant")
+        self.top.title("Edit Participant" if participant_id else "Add Participant")
+        self.top.geometry("400x450")
         self.create_widgets()
         if participant_id:
             self.load_participant()
 
     def create_widgets(self):
-        tk.Label(self.top, text="Name:").grid(row=0, column=0, padx=10, pady=5)
-        self.name_entry = tk.Entry(self.top)
-        self.name_entry.grid(row=0, column=1, padx=10, pady=5)
+        main_frame = ttk.Frame(self.top, padding=20)
+        main_frame.pack(fill=tk.BOTH, expand=True)
 
-        tk.Label(self.top, text="Phone:").grid(row=1, column=0, padx=10, pady=5)
-        self.phone_entry = tk.Entry(self.top)
-        self.phone_entry.grid(row=1, column=1, padx=10, pady=5)
+        ttk.Label(main_frame, text="Name:").pack(anchor=tk.W, pady=(0, 5))
+        self.name_entry = ttk.Entry(main_frame)
+        self.name_entry.pack(fill=tk.X, pady=(0, 15))
 
-        tk.Label(self.top, text="Address:").grid(row=2, column=0, padx=10, pady=5)
-        self.address_entry = tk.Entry(self.top)
-        self.address_entry.grid(row=2, column=1, padx=10, pady=5)
+        ttk.Label(main_frame, text="Phone:").pack(anchor=tk.W, pady=(0, 5))
+        self.phone_entry = ttk.Entry(main_frame)
+        self.phone_entry.pack(fill=tk.X, pady=(0, 15))
 
-        tk.Label(self.top, text="CNIC:").grid(row=3, column=0, padx=10, pady=5)
-        self.cnic_entry = tk.Entry(self.top)
-        self.cnic_entry.grid(row=3, column=1, padx=10, pady=5)
+        ttk.Label(main_frame, text="Address:").pack(anchor=tk.W, pady=(0, 5))
+        self.address_entry = ttk.Entry(main_frame)
+        self.address_entry.pack(fill=tk.X, pady=(0, 15))
 
-        tk.Button(self.top, text="Save", command=self.save).grid(row=4, column=0, pady=10)
-        tk.Button(self.top, text="Cancel", command=self.top.destroy).grid(row=4, column=1, pady=10)
+        ttk.Label(main_frame, text="CNIC:").pack(anchor=tk.W, pady=(0, 5))
+        self.cnic_entry = ttk.Entry(main_frame)
+        self.cnic_entry.pack(fill=tk.X, pady=(0, 15))
+
+        btn_frame = ttk.Frame(main_frame)
+        btn_frame.pack(fill=tk.X, pady=10)
+        ttk.Button(btn_frame, text="Save", command=self.save, style="TButton").pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
+        ttk.Button(btn_frame, text="Cancel", command=self.top.destroy).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=5)
 
     def load_participant(self):
         p = self.db.get_participant(self.participant_id)

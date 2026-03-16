@@ -48,6 +48,8 @@ class Database:
                 seller_details TEXT,
                 total_shares INTEGER NOT NULL,
                 remaining_shares INTEGER NOT NULL,
+                category TEXT DEFAULT 'Qurbani', -- Qurbani, Waqf
+                status TEXT DEFAULT 'Available', -- Available, Completed
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP
             )
         ''')
@@ -116,6 +118,18 @@ class Database:
             password_hash = hashlib.sha256('admin123'.encode()).hexdigest()
             cursor.execute("INSERT INTO admins (username, password_hash) VALUES (?, ?)", ('admin', password_hash))
 
+        # Migration: Add category to animals if missing
+        try:
+            cursor.execute("SELECT category FROM animals LIMIT 1")
+        except sqlite3.OperationalError:
+            cursor.execute("ALTER TABLE animals ADD COLUMN category TEXT DEFAULT 'Qurbani'")
+
+        # Migration: Add status to animals if missing
+        try:
+            cursor.execute("SELECT status FROM animals LIMIT 1")
+        except sqlite3.OperationalError:
+            cursor.execute("ALTER TABLE animals ADD COLUMN status TEXT DEFAULT 'Available'")
+
         # Migration: Add paid_amount to participants if missing
         try:
             cursor.execute("SELECT paid_amount FROM participants LIMIT 1")
@@ -127,6 +141,13 @@ class Database:
             cursor.execute("SELECT actual_buy_price FROM animals LIMIT 1")
         except sqlite3.OperationalError:
             cursor.execute("ALTER TABLE animals ADD COLUMN actual_buy_price REAL DEFAULT 0.0")
+
+        # Indexes for performance
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_participants_name ON participants(name)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_animals_category ON animals(category)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_animals_status ON animals(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_shares_animal ON shares(animal_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_shares_participant ON shares(participant_id)")
 
         conn.commit()
         conn.close()
@@ -198,26 +219,38 @@ class Database:
         return True, "Deleted successfully"
 
     # Animal methods
-    def add_animal(self, animal_type, purchase_price, seller_details, total_shares, actual_buy_price=0.0):
+    def add_animal(self, animal_type, purchase_price, seller_details, total_shares, actual_buy_price=0.0, category='Qurbani'):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO animals (animal_type, purchase_price, seller_details, total_shares, remaining_shares, actual_buy_price)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (animal_type, purchase_price, seller_details, total_shares, total_shares, actual_buy_price))
+            INSERT INTO animals (animal_type, purchase_price, seller_details, total_shares, remaining_shares, actual_buy_price, category)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (animal_type, purchase_price, seller_details, total_shares, total_shares, actual_buy_price, category))
         animal_id = cursor.lastrowid
         conn.commit()
         conn.close()
         return animal_id
 
-    def get_animals(self):
+    def get_animals(self, animal_type=None, category=None, status=None):
         conn = self.get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM animals")
+        query = "SELECT * FROM animals WHERE 1=1"
+        params = []
+        if animal_type and animal_type != "All":
+            query += " AND animal_type = ?"
+            params.append(animal_type)
+        if category and category != "All":
+            query += " AND category = ?"
+            params.append(category)
+        if status and status != "All":
+            query += " AND status = ?"
+            params.append(status)
+
+        cursor.execute(query, params)
         rows = cursor.fetchall()
         conn.close()
         return rows
-        
+
     def get_animal(self, animal_id):
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -226,17 +259,17 @@ class Database:
         conn.close()
         return row
 
-    def update_animal(self, animal_id, animal_type, price, seller, total_shares, actual_buy_price=0.0):
+    def update_animal(self, animal_id, animal_type, price, seller, total_shares, actual_buy_price=0.0, category='Qurbani', status='Available'):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute('''
             UPDATE animals
-            SET animal_type = ?, purchase_price = ?, seller_details = ?, total_shares = ?, actual_buy_price = ?
+            SET animal_type = ?, purchase_price = ?, seller_details = ?, total_shares = ?, actual_buy_price = ?, category = ?, status = ?
             WHERE animal_id = ?
-        ''', (animal_type, price, seller, total_shares, actual_buy_price, animal_id))
+        ''', (animal_type, price, seller, total_shares, actual_buy_price, category, status, animal_id))
         conn.commit()
         conn.close()
-        
+
     def delete_animal(self, animal_id):
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -251,42 +284,48 @@ class Database:
         return True
 
     # Share allocation
-    def allocate_share(self, participant_id, animal_id):
+    def allocate_shares(self, participant_id, animal_id, num_shares=1):
         conn = self.get_connection()
         cursor = conn.cursor()
-        
+
         # Get animal details
         cursor.execute("SELECT remaining_shares, purchase_price, total_shares, actual_buy_price FROM animals WHERE animal_id = ?", (animal_id,))
         animal_data = cursor.fetchone()
-        if not animal_data or animal_data[0] <= 0:
+        if not animal_data or animal_data[0] < num_shares:
             conn.close()
-            return False, "No shares available"
-            
+            return False, f"Not enough shares available (Available: {animal_data[0] if animal_data else 0})"
+
         remaining, price, total_shares, actual_price = animal_data
-        
+
         # Use actual price if set, otherwise estimated price
         cost_basis = actual_price if actual_price > 0 else price
-        share_cost = cost_basis / total_shares
+        share_cost = (cost_basis / total_shares) * num_shares
 
         try:
             # Allocate
-            cursor.execute('''
-                INSERT INTO shares (participant_id, animal_id, share_number)
-                VALUES (?, ?, ?)
-            ''', (participant_id, animal_id, total_shares - remaining + 1))
-            
+            for i in range(num_shares):
+                cursor.execute('''
+                    INSERT INTO shares (participant_id, animal_id, share_number)
+                    VALUES (?, ?, ?)
+                ''', (participant_id, animal_id, total_shares - remaining + 1 + i))
+
             # Update animal
-            cursor.execute("UPDATE animals SET remaining_shares = remaining_shares - 1 WHERE animal_id = ?", (animal_id,))
-            
+            new_remaining = remaining - num_shares
+            new_status = 'Completed' if new_remaining == 0 else 'Available'
+            cursor.execute("UPDATE animals SET remaining_shares = ?, status = ? WHERE animal_id = ?", (new_remaining, new_status, animal_id))
+
             # Update participant
-            cursor.execute("UPDATE participants SET shares_purchased = shares_purchased + 1, total_cost = total_cost + ? WHERE participant_id = ?", (share_cost, participant_id))
-            
+            cursor.execute("UPDATE participants SET shares_purchased = shares_purchased + ?, total_cost = total_cost + ? WHERE participant_id = ?", (num_shares, share_cost, participant_id))
+
             conn.commit()
-            return True, "Share allocated successfully"
+            return True, f"{num_shares} shares allocated successfully"
         except Exception as e:
             return False, str(e)
         finally:
             conn.close()
+
+    def allocate_share(self, participant_id, animal_id):
+        return self.allocate_shares(participant_id, animal_id, 1)
 
     # Payment methods
     def add_payment(self, participant_id, amount):
@@ -296,10 +335,10 @@ class Database:
             INSERT INTO payments (participant_id, amount)
             VALUES (?, ?)
         ''', (participant_id, amount))
-        
+
         # Update participant paid amount
         cursor.execute("UPDATE participants SET paid_amount = paid_amount + ? WHERE participant_id = ?", (amount, participant_id))
-        
+
         conn.commit()
         conn.close()
         return True
@@ -312,12 +351,12 @@ class Database:
         # Simple auto-increment logic via count for now, or just use DB ID after insert
         count = cursor.execute("SELECT COUNT(*) FROM receipts").fetchone()[0] + 1
         receipt_no = f"R-{datetime.now().year}-{count:04d}"
-        
+
         cursor.execute('''
             INSERT INTO receipts (receipt_no, participant_id, amount)
             VALUES (?, ?, ?)
         ''', (receipt_no, participant_id, amount))
-        
+
         conn.commit()
         conn.close()
         return receipt_no
@@ -353,7 +392,7 @@ class Database:
         cursor = conn.cursor()
         cursor.execute("SELECT delivered FROM distributions WHERE participant_id = ?", (participant_id,))
         result = cursor.fetchone()
-        
+
         if result and result[0]: # If delivered, mark undelivered
             cursor.execute("UPDATE distributions SET delivered = FALSE, delivered_at = NULL WHERE participant_id = ?", (participant_id,))
         else: # Mark delivered
@@ -361,7 +400,7 @@ class Database:
                 INSERT OR REPLACE INTO distributions (dist_id, participant_id, delivered, delivered_at)
                 VALUES ((SELECT dist_id FROM distributions WHERE participant_id = ?), ?, TRUE, ?)
             ''', (participant_id, participant_id, datetime.now().isoformat()))
-        
+
         conn.commit()
         conn.close()
 
@@ -369,14 +408,21 @@ class Database:
     def get_dashboard_stats(self):
         conn = self.get_connection()
         cursor = conn.cursor()
-        
+
         stats = {}
         stats['participants'] = cursor.execute("SELECT COUNT(*) FROM participants").fetchone()[0]
         stats['animals'] = cursor.execute("SELECT COUNT(*) FROM animals").fetchone()[0]
         stats['shares_sold'] = cursor.execute("SELECT SUM(shares_purchased) FROM participants").fetchone()[0] or 0
         stats['collected'] = cursor.execute("SELECT SUM(amount) FROM payments").fetchone()[0] or 0
         stats['pending_shares'] = cursor.execute("SELECT SUM(remaining_shares) FROM animals").fetchone()[0] or 0
-        
+
+        # Advanced Stats
+        stats['waqf_animals'] = cursor.execute("SELECT COUNT(*) FROM animals WHERE category = 'Waqf'").fetchone()[0]
+        stats['qurbani_animals'] = cursor.execute("SELECT COUNT(*) FROM animals WHERE category = 'Qurbani'").fetchone()[0]
+
+        cursor.execute("SELECT animal_type, COUNT(*) FROM animals GROUP BY animal_type")
+        stats['type_breakdown'] = dict(cursor.fetchall())
+
         conn.close()
         return stats
 

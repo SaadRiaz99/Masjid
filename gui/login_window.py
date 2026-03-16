@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 from database import Database
 
 class LoginWindow:
@@ -10,24 +10,38 @@ class LoginWindow:
         self.create_widgets()
 
     def create_widgets(self):
-        self.root.title("Admin Login")
-        self.root.geometry("300x200")
+        self.root.title("Admin Login - Qurbani Management")
+        self.root.geometry("400x350")
+        
+        # Main Frame
+        main_frame = ttk.Frame(self.root, padding=40)
+        main_frame.pack(fill=tk.BOTH, expand=True)
 
-        tk.Label(self.root, text="Username:").pack(pady=5)
-        self.username_entry = tk.Entry(self.root)
-        self.username_entry.pack(pady=5)
+        # Title
+        ttk.Label(main_frame, text="Login Required", style="Header.TLabel").pack(pady=(0, 20))
 
-        tk.Label(self.root, text="Password:").pack(pady=5)
-        self.password_entry = tk.Entry(self.root, show="*")
-        self.password_entry.pack(pady=5)
+        # Username
+        ttk.Label(main_frame, text="Username:").pack(anchor=tk.W, pady=2)
+        self.username_entry = ttk.Entry(main_frame)
+        self.username_entry.pack(fill=tk.X, pady=(0, 10))
+        self.username_entry.insert(0, "admin")
 
-        tk.Button(self.root, text="Login", command=self.login).pack(pady=20)
+        # Password
+        ttk.Label(main_frame, text="Password:").pack(anchor=tk.W, pady=2)
+        self.password_entry = ttk.Entry(main_frame, show="*")
+        self.password_entry.pack(fill=tk.X, pady=(0, 10))
+
+        # Login Button
+        self.login_btn = ttk.Button(main_frame, text="Login", command=self.login, style="TButton")
+        self.login_btn.pack(fill=tk.X, pady=20, ipady=5)
+
+        # Software Footer
+        ttk.Label(main_frame, text="Software By Saad Bin Riaz 0314 1088892", style="Footer.TLabel").pack(side=tk.BOTTOM)
 
     def login(self):
         username = self.username_entry.get()
         password = self.password_entry.get()
         if self.db.authenticate_admin(username, password):
-            # Don't destroy the root, just signal success
             self.on_login_success()
         else:
             messagebox.showerror("Error", "Invalid credentials")
