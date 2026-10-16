@@ -1,0 +1,12 @@
+id,name,category,quantity,unit,region,reorder_level,status
+1,Oral Rehydration Salts,Medicine,500,boxes,North Valley,100,In Stock
+2,Bottled Water,Water,2400,liters,Riverbend,600,In Stock
+3,Rice Bags,Food,1800,kg,Central Plains,400,In Stock
+4,Camping Tent,Shelter,45,pcs,Coastal Strip,50,Low
+5,Thermal Blankets,Clothing,60,packs,Central Plains,40,In Stock
+6,First Aid Kit,Medicine,25,boxes,North Valley,30,Low
+7,Portable Generator,Equipment,12,units,Highland,5,In Stock
+8,Ready-to-eat Meals,Food,900,kg,Central Plains,300,In Stock
+9,Surgical Masks,Medicine,400,boxes,Riverbend,100,In Stock
+10,Water Purification Tablets,Water,80,packs,Coastal Strip,100,Low
+11,Tarpaulin Sheets,Shelter,0,pcs,Riverbend,50,Out of Stock

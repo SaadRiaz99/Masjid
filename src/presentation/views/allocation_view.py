@@ -21,8 +21,8 @@ class AllocationView(BaseView):
     )
 
     form_fields = (
-        FieldSpec("resource", "Resource"),
-        FieldSpec("region", "Region"),
+        FieldSpec("resource", "Resource", kind="combo", options_from="resources"),
+        FieldSpec("region", "Region", kind="combo", options_from="regions"),
         FieldSpec("quantity", "Quantity", kind="number"),
         FieldSpec(
             "priority",

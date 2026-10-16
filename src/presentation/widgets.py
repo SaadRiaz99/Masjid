@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import tkinter as tk
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from tkinter import messagebox, ttk
 
 # ---------------------------------------------------------------------------
@@ -39,6 +39,9 @@ class FieldSpec:
     kind: str = "text"  # text | number | combo
     options: tuple = ()
     required: bool = True
+    #: When set, the combo choices are loaded from live data instead of
+    #: ``options``.  Supported sources: ``"regions"``, ``"resources"``.
+    options_from: str = ""
 
 
 class DataTable(ttk.Frame):
@@ -277,11 +280,7 @@ class BaseView(ttk.Frame):
     # CRUD actions
     # ------------------------------------------------------------------
     def new(self):
-        data = RecordDialog(
-            self.winfo_toplevel(),
-            f"New {self.entity_name}",
-            self.form_fields,
-        ).result
+        data = self._open_dialog(f"New {self.entity_name}")
         if data is None:
             return
         self._run(lambda: self.create_record(data), f"{self.entity_name} created")
@@ -291,12 +290,7 @@ class BaseView(ttk.Frame):
         if row is None:
             messagebox.showinfo("Select", f"Select a {self.entity_name} first.", parent=self)
             return
-        data = RecordDialog(
-            self.winfo_toplevel(),
-            f"Edit {self.entity_name}",
-            self.form_fields,
-            initial=row,
-        ).result
+        data = self._open_dialog(f"Edit {self.entity_name}", initial=row)
         if data is None:
             return
         self._run(
@@ -339,6 +333,29 @@ class BaseView(ttk.Frame):
     # ------------------------------------------------------------------
     # Internals
     # ------------------------------------------------------------------
+    def _open_dialog(self, title, initial=None) -> dict | None:
+        """Show the record form, filling combo boxes that depend on live data."""
+        fields = [self._with_live_options(spec) for spec in self.form_fields]
+        return RecordDialog(
+            self.winfo_toplevel(), title, fields, initial=initial
+        ).result
+
+    def _with_live_options(self, spec: FieldSpec) -> FieldSpec:
+        if not spec.options_from:
+            return spec
+        try:
+            names = self._live_options(spec.options_from)
+        except Exception:  # noqa: BLE001 - fall back to the declared choices
+            return spec
+        return replace(spec, options=tuple(names))
+
+    def _live_options(self, source: str) -> list[str]:
+        if source == "regions":
+            return [row["name"] for row in self.backend.list_regions()]
+        if source == "resources":
+            return [row["name"] for row in self.backend.list_resources()]
+        raise ValueError(f"Unknown options source: {source!r}")
+
     def _run(self, action, success_message):
         try:
             action()

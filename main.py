@@ -1,17 +1,15 @@
-from src.models.resource import Resource
-from src.presentation.views import main
+"""Entry point for the DRAIE desktop application.
 
-def main():
-    medicine = Resource("Medicine", 100)
-    medicine.add_stock(20)
-    print("After adding stock:")
-    medicine.display()
-    
-    camping_tent = Resource("Camping Tent", 19)
-    # camping_tent.add_stock(20)
-    camping_tent.use_stock(10)
-    camping_tent.display()
+Run it with::
 
+    python main.py
+
+(or ``python -m src.presentation.app`` - they launch the same window).
+"""
+
+from __future__ import annotations
+
+from src.presentation.app import main
 
 if __name__ == "__main__":
     main()

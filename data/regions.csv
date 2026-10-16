@@ -1,0 +1,6 @@
+id,name,district,coordinator,population,risk_level
+1,North Valley,North district,Ali Raza,125000,High
+2,Riverbend,East district,Sara Khan,84000,Critical
+3,Highland,West district,Usman Tariq,53000,Medium
+4,Coastal Strip,South district,Fatima Noor,97000,High
+5,Central Plains,Central district,Hamza Siddiqui,141000,Low

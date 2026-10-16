@@ -22,8 +22,8 @@ class RegionsView(BaseView):
     form_fields = (
         FieldSpec("name", "Region Name"),
         FieldSpec("district", "District"),
-        FieldSpec("coordinator", "Coordinator"),
-        FieldSpec("population", "Population", kind="number"),
+        FieldSpec("coordinator", "Coordinator", required=False),
+        FieldSpec("population", "Population", kind="number", required=False),
         FieldSpec(
             "risk_level",
             "Risk Level",

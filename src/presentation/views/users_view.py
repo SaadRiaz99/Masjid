@@ -28,7 +28,7 @@ class UsersView(BaseView):
             kind="combo",
             options=("Admin", "Manager", "Coordinator", "Viewer"),
         ),
-        FieldSpec("region", "Region"),
+        FieldSpec("region", "Region", kind="combo", options_from="regions", required=False),
         FieldSpec(
             "status",
             "Status",

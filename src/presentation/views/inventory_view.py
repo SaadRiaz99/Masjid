@@ -7,7 +7,7 @@ from ..widgets import BaseView, Column, FieldSpec
 
 class InventoryView(BaseView):
     title = "Inventory Management"
-    subtitle = "Track disaster-relief resources and stock levels."
+    subtitle = "Track disaster-relief resources and stock levels. Status is derived from stock."
     entity_name = "resource"
 
     columns = (
@@ -44,14 +44,8 @@ class InventoryView(BaseView):
             kind="combo",
             options=("pcs", "boxes", "kg", "liters", "packs", "units"),
         ),
-        FieldSpec("region", "Region"),
-        FieldSpec("reorder_level", "Reorder Level", kind="number"),
-        FieldSpec(
-            "status",
-            "Status",
-            kind="combo",
-            options=("In Stock", "Low", "Out of Stock"),
-        ),
+        FieldSpec("region", "Region", kind="combo", options_from="regions", required=False),
+        FieldSpec("reorder_level", "Reorder Level", kind="number", required=False),
     )
 
     def fetch_rows(self):

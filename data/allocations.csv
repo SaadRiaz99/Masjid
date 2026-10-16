@@ -1,0 +1,8 @@
+id,resource,region,quantity,priority,date,status
+1,Oral Rehydration Salts,Riverbend,120,High,2026-10-12,In Transit
+2,Camping Tent,Coastal Strip,20,Critical,2026-10-14,Approved
+3,Thermal Blankets,Highland,25,Medium,2026-10-15,Pending
+4,Ready-to-eat Meals,Riverbend,300,Critical,2026-10-10,Delivered
+5,Surgical Masks,North Valley,150,Low,2026-10-16,Pending
+6,Bottled Water,Coastal Strip,400,High,2026-10-13,In Transit
+7,Rice Bags,Highland,200,Medium,2026-10-09,Cancelled

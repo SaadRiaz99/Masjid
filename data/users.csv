@@ -1,0 +1,7 @@
+id,name,username,role,region,status
+1,Saad Riaz,saad,Admin,,Active
+2,Ayesha Malik,ayesha,Manager,Riverbend,Active
+3,Ali Raza,ali,Coordinator,North Valley,Active
+4,Sara Khan,sara,Coordinator,Riverbend,Active
+5,Bilal Ahmed,bilal,Viewer,Central Plains,Active
+6,Nadia Iqbal,nadia,Viewer,Highland,Inactive

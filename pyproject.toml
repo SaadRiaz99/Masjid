@@ -1,7 +1,7 @@
 [project]
 name = "softwarre"
 version = "0.1.0"
-description = "Add your description here"
+description = "DRAIE - Disaster Resource Allocator & Inventory Engine"
 readme = "README.md"
 authors = [
     { name = "Saad Bin Riaz", email = "malik.saad.riaz.96@gmail.com" }
