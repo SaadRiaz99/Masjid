@@ -1,5 +1,5 @@
 from src.models.resource import Resource
-
+from src.presentation.views import main
 
 def main():
     medicine = Resource("Medicine", 100)
