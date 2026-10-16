@@ -9,7 +9,7 @@ def main():
     
     camping_tent = Resource("Camping Tent", 19)
     # camping_tent.add_stock(20)
-    camping_tent.use_stock(40)
+    camping_tent.use_stock(10)
     camping_tent.display()
 
 

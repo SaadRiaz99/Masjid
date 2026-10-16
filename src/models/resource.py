@@ -12,8 +12,9 @@ class Resource:
         print(f"Quantity: {self.quantity}")
 
 
-    def add_stock(self , amount):
-        if amount > 0:
+    
+    def add_stock(self, amount):
+        if amount <= 0:
             raise ValueError("Amount must be positive.")
 
         self.quantity += amount
